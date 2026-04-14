@@ -11,8 +11,12 @@
      ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+  // ▼▼▼ PASTE YOUR FIREBASE CONFIG HERE (same as veteran form) ▼▼▼
   const firebaseConfig = {
     apiKey: "AIzaSyA6ejmXphsdbT6xNjKQNjjuTss24m3hOfg",
     authDomain: "schf-medical.firebaseapp.com",
@@ -21,16 +25,18 @@
     messagingSenderId: "632701331445",
     appId: "1:632701331445:web:a3666ba74f7023dc9462bc"
   };
+  // ▲▲▲ END OF CONFIG BLOCK ▲▲▲
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  window.__firebaseDB = db;
-  window.__firebaseAddDoc = addDoc;
-  window.__firebaseCollection = collection;
-  window.__firebaseServerTimestamp = serverTimestamp;
-  window.__firebaseReady = true;
+  const auth = getAuth(app);
+
+  // Expose to global
+  window.FB = { db, auth, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+  window.FB_READY = true;
   document.dispatchEvent(new Event('firebase-ready'));
 </script>
+
 <style>
   :root {
     --navy: #0a1628;
