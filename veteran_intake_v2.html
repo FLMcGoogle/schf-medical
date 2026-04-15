@@ -5,16 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Space Coast Honor Flight – Veteran Medical Form</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-
-<!-- ============================================================
-     FIREBASE CONFIG — REPLACE THIS BLOCK WITH YOUR OWN CONFIG
-     Get it from: Firebase Console → Project Settings → Your Apps
-     ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  // ▼▼▼ PASTE YOUR FIREBASE CONFIG HERE ▼▼▼
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   const firebaseConfig = {
     apiKey: "AIzaSyA6ejmXphsdbT6xNjKQNjjuTss24m3hOfg",
     authDomain: "schf-medical.firebaseapp.com",
@@ -23,37 +17,29 @@
     messagingSenderId: "632701331445",
     appId: "1:632701331445:web:a3666ba74f7023dc9462bc"
   };
-  // ▲▲▲ END OF CONFIG BLOCK ▲▲▲
-
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-
   window.__firebaseDB = db;
   window.__firebaseAddDoc = addDoc;
+  window.__firebaseGetDocs = getDocs;
+  window.__firebaseQuery = query;
+  window.__firebaseOrderBy = orderBy;
   window.__firebaseCollection = collection;
   window.__firebaseServerTimestamp = serverTimestamp;
   window.__firebaseReady = true;
   document.dispatchEvent(new Event('firebase-ready'));
 </script>
-
 <style>
   :root {
-    --navy: #0a1628;
-    --deep-navy: #060e1c;
-    --red: #b22234;
-    --bright-red: #d42b3a;
-    --white: #f8f8f8;
-    --gold: #c8a951;
-    --light-blue: #4a7fc1;
-    --border: #2a3f6e;
+    --navy: #0a1628; --deep-navy: #060e1c; --red: #b22234; --bright-red: #d42b3a;
+    --white: #f8f8f8; --gold: #c8a951; --light-blue: #4a7fc1; --border: #2a3f6e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', sans-serif; background: var(--deep-navy); color: var(--white); min-height: 100vh; }
   body::before {
     content: ''; position: fixed; inset: 0;
     background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px);
-    background-size: 200px 200px, 150px 150px;
-    background-position: 0 0, 75px 50px;
+    background-size: 200px 200px, 150px 150px; background-position: 0 0, 75px 50px;
     pointer-events: none; z-index: 0; opacity: 0.25;
   }
   .stripes-banner { height: 12px; background: repeating-linear-gradient(90deg, var(--red) 0, var(--red) 7.69%, #f8f8f8 7.69%, #f8f8f8 15.38%); }
@@ -67,11 +53,6 @@
   .info-box { background: linear-gradient(135deg, rgba(178,34,52,0.2), rgba(10,22,40,0.8)); border: 1px solid var(--red); border-left: 4px solid var(--gold); border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; }
   .info-box p { font-size: 0.92rem; line-height: 1.6; color: #c8d8ee; }
   .info-box strong { color: var(--gold); }
-
-  /* Config warning banner */
-  .config-warning { background: rgba(200,100,0,0.2); border: 2px solid orange; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; color: #ffcc66; font-size: 0.88rem; display: none; }
-  .config-warning strong { display: block; font-size: 1rem; margin-bottom: 4px; }
-
   .section-card { background: rgba(10,22,40,0.85); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; backdrop-filter: blur(4px); }
   .section-header { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: linear-gradient(90deg, rgba(178,34,52,0.3), rgba(10,22,40,0)); border-bottom: 1px solid var(--border); }
   .section-header h2 { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -79,8 +60,11 @@
   .form-row { margin-bottom: 18px; }
   .form-row label { display: block; font-size: 0.9rem; font-weight: 600; color: #c8d8ee; margin-bottom: 6px; line-height: 1.4; }
   .required { color: var(--gold); }
-  .form-row input[type="text"], .form-row input[type="tel"], .form-row input[type="date"], .form-row input[type="email"], .form-row textarea, .form-row select {
-    width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 6px; color: var(--white); font-family: 'Source Sans 3', sans-serif; font-size: 0.95rem; padding: 10px 14px; transition: border-color 0.2s; outline: none; -webkit-appearance: none;
+  .form-row input[type="text"], .form-row input[type="tel"], .form-row input[type="date"],
+  .form-row input[type="email"], .form-row textarea, .form-row select {
+    width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--white); font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.95rem; padding: 10px 14px; transition: border-color 0.2s; outline: none; -webkit-appearance: none;
   }
   .form-row input:focus, .form-row textarea:focus, .form-row select:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); }
   .form-row textarea { resize: vertical; min-height: 80px; }
@@ -90,9 +74,11 @@
   .radio-opt input, .check-opt input { width: 16px; height: 16px; accent-color: var(--gold); }
   .conditional { display: none; margin-top: 12px; padding: 14px; background: rgba(255,255,255,0.04); border-left: 3px solid var(--light-blue); border-radius: 0 6px 6px 0; }
   .conditional.show { display: block; }
-  .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 8px; }
+  .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 500px) { .two-col { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+  .inline-row { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+  .inline-row .form-row { flex: 1; min-width: 140px; }
   .submit-section { margin-top: 30px; text-align: center; }
   .btn-submit { background: linear-gradient(135deg, var(--red), #8b1a28); color: white; border: 2px solid var(--gold); font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.1em; padding: 16px 48px; border-radius: 50px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 20px rgba(178,34,52,0.4); width: 100%; max-width: 380px; }
   .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 30px rgba(178,34,52,0.6); }
@@ -105,6 +91,7 @@
   #successScreen p { color: #a0b4d4; font-size: 1.05rem; max-width: 460px; line-height: 1.6; }
   footer { position: relative; z-index: 1; text-align: center; padding: 20px; color: #5a7090; font-size: 0.8rem; border-top: 1px solid var(--border); }
   select option { background: #1a2a4a; color: white; }
+  .flight-loading { color: #6a88b8; font-size: 0.85rem; font-style: italic; padding: 8px 0; }
 </style>
 </head>
 <body>
@@ -118,11 +105,6 @@
 </header>
 
 <main>
-  <div class="config-warning" id="configWarning">
-    <strong>⚠️ Firebase Not Configured</strong>
-    This form is not yet connected to the database. Your submission will not be saved until Firebase config is added. See the setup guide.
-  </div>
-
   <div class="info-box">
     <p><strong>Your safety is our highest priority.</strong> Please complete this form honestly and thoroughly. These questions help our medical team provide the best possible care during your honored journey to Washington, D.C. <strong>Failure to complete this form may result in rescheduling your flight.</strong></p>
   </div>
@@ -135,31 +117,46 @@
       <div class="section-body">
         <div class="two-col">
           <div class="form-row">
-            <label>Full Name <span class="required">*</span></label>
-            <input type="text" name="veteran_name" placeholder="First Middle Last" required>
+            <label>First Name <span class="required">*</span></label>
+            <input type="text" name="first_name" placeholder="First name" required>
           </div>
           <div class="form-row">
-            <label>Flight Date</label>
-            <input type="date" name="flight_date">
+            <label>Last Name <span class="required">*</span></label>
+            <input type="text" name="last_name" placeholder="Last name" required>
           </div>
         </div>
         <div class="two-col">
           <div class="form-row">
             <label>Cell Phone <span class="required">*</span></label>
-            <input type="tel" name="phone" placeholder="(321) 555-0000" required>
+            <input type="tel" name="phone" id="phoneInput" placeholder="321-555-0000" required>
           </div>
           <div class="form-row">
             <label>Date of Birth</label>
             <input type="date" name="dob">
           </div>
         </div>
-        <div class="form-row">
-          <label>Email Address</label>
-          <input type="email" name="email" placeholder="email@example.com">
+        <div class="two-col">
+          <div class="form-row">
+            <label>Flight Date <span class="required">*</span></label>
+            <select name="flight_date" id="flightDateSelect" required>
+              <option value="">⏳ Loading available flights...</option>
+            </select>
+            <div id="flightDateMsg" class="flight-loading" style="display:none"></div>
+          </div>
+          <div class="form-row">
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="email@example.com">
+          </div>
         </div>
-        <div class="form-row">
-          <label>Doctor's Name &amp; Phone Number <span class="required">*</span></label>
-          <input type="text" name="doctor_info" placeholder="Dr. Smith — (321) 555-1234" required>
+        <div class="two-col">
+          <div class="form-row">
+            <label>Doctor's Name <span class="required">*</span></label>
+            <input type="text" name="doctor_name" placeholder="Dr. Smith" required>
+          </div>
+          <div class="form-row">
+            <label>Doctor's Phone Number <span class="required">*</span></label>
+            <input type="tel" name="doctor_phone" id="doctorPhoneInput" placeholder="321-555-1234" required>
+          </div>
         </div>
       </div>
     </div>
@@ -182,8 +179,12 @@
         <div class="form-row">
           <label>Do you have any metal implants or devices? <span class="required">*</span></label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="metal_implants" value="yes"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="metal_implants" value="no"> No</label>
+            <label class="radio-opt"><input type="radio" name="metal_implants" value="yes" onchange="toggle('metal_type',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="metal_implants" value="no" onchange="toggle('metal_type',false)"> No</label>
+          </div>
+          <div id="metal_type" class="conditional">
+            <label>Type:</label>
+            <textarea name="metal_implants_type" placeholder="Please describe the type of implant or device..."></textarea>
           </div>
         </div>
       </div>
@@ -200,10 +201,29 @@
             <label class="radio-opt"><input type="radio" name="requires_oxygen" value="no" onchange="toggle('oxygen_detail',false)"> No</label>
           </div>
           <div id="oxygen_detail" class="conditional">
-            <label>Oxygen usage:</label>
-            <div class="radio-group" style="margin-top:8px">
-              <label class="radio-opt"><input type="radio" name="oxygen_type" value="constant"> All the time (Constant)</label>
-              <label class="radio-opt"><input type="radio" name="oxygen_type" value="prn"> As needed (PRN)</label>
+            <div class="form-row">
+              <label>Oxygen usage:</label>
+              <div class="radio-group">
+                <label class="radio-opt"><input type="radio" name="oxygen_type" value="constant"> All the time (Constant)</label>
+                <label class="radio-opt"><input type="radio" name="oxygen_type" value="prn"> As needed (PRN)</label>
+              </div>
+            </div>
+            <div class="inline-row">
+              <div class="form-row" style="flex:0 0 auto; min-width:200px">
+                <label>How many liters of oxygen? <span class="required">*</span></label>
+                <select name="oxygen_liters" id="oxygenLiters">
+                  <option value="">— Select —</option>
+                  <option value="1">1 L/min</option>
+                  <option value="2">2 L/min</option>
+                  <option value="3">3 L/min</option>
+                  <option value="4">4 L/min</option>
+                  <option value=">4">&gt;4 L/min</option>
+                </select>
+              </div>
+              <div class="form-row" style="flex:1; min-width:180px">
+                <label>More info:</label>
+                <input type="text" name="oxygen_more_info" placeholder="Any additional oxygen details...">
+              </div>
             </div>
           </div>
         </div>
@@ -342,17 +362,17 @@
             <label class="radio-opt"><input type="radio" name="mobility_help" value="no" onchange="toggle('mobility_aids',false)"> No</label>
           </div>
           <div id="mobility_aids" class="conditional">
-            <label>What do you use?</label>
+            <label>What do you use? (select all that apply)</label>
             <div class="check-grid" style="margin-top:10px">
-              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Scooter"> 🛵 Scooter</label>
-              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Wheelchair"> ♿ Wheelchair</label>
-              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Walker"> 🚶 Walker</label>
-              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Cane"> 🦯 Cane</label>
+              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Scooter"> Scooter</label>
+              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Wheelchair"> Wheelchair</label>
+              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Walker"> Walker</label>
+              <label class="check-opt"><input type="checkbox" name="mobility_aid" value="Cane"> Cane</label>
             </div>
           </div>
         </div>
         <div class="form-row">
-          <label>Will you need a wheelchair to get to/from your seat on the airplane? <span class="required">*</span></label>
+          <label>Will you need a wheelchair to get on and off the airplane? <span class="required">*</span></label>
           <div class="radio-group">
             <label class="radio-opt"><input type="radio" name="airport_wheelchair" value="yes"> Yes</label>
             <label class="radio-opt"><input type="radio" name="airport_wheelchair" value="no"> No</label>
@@ -382,8 +402,12 @@
         <div class="form-row">
           <label>Do you have any problems flying?</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="flying_problems" value="yes"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="flying_problems" value="no"> No</label>
+            <label class="radio-opt"><input type="radio" name="flying_problems" value="yes" onchange="toggle('flying_problems_detail',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="flying_problems" value="no" onchange="toggle('flying_problems_detail',false)"> No</label>
+          </div>
+          <div id="flying_problems_detail" class="conditional">
+            <label>Please describe:</label>
+            <textarea name="flying_problems_description" placeholder="Please describe your concerns with flying..."></textarea>
           </div>
         </div>
         <div class="form-row">
@@ -427,25 +451,71 @@
 <footer>Space Coast Honor Flight &copy; 2025 &nbsp;|&nbsp; Honoring Those Who Served</footer>
 
 <script>
-function toggle(id, show) { document.getElementById(id).classList.toggle('show', show); }
+function toggle(id, show) {
+  document.getElementById(id).classList.toggle('show', show);
+  if (id === 'oxygen_detail') document.getElementById('oxygenLiters').required = show;
+}
 
-// Check if Firebase config has been filled in
-document.addEventListener('firebase-ready', () => {
-  const projectId = window.__firebaseDB?.app?.options?.projectId || '';
-  if (projectId.includes('PASTE_YOUR') || !projectId) {
-    document.getElementById('configWarning').style.display = 'block';
+function formatPhone(input) {
+  let v = input.value.replace(/\D/g, '').substring(0, 10);
+  if (v.length >= 7) v = v.substring(0,3) + '-' + v.substring(3,6) + '-' + v.substring(6);
+  else if (v.length >= 4) v = v.substring(0,3) + '-' + v.substring(3);
+  input.value = v;
+}
+document.getElementById('phoneInput').addEventListener('input', function(){ formatPhone(this); });
+document.getElementById('doctorPhoneInput').addEventListener('input', function(){ formatPhone(this); });
+
+// ── Load flight dates from Firestore ──
+async function loadFlightDates() {
+  const sel = document.getElementById('flightDateSelect');
+  const msg = document.getElementById('flightDateMsg');
+  try {
+    if (!window.__firebaseReady) {
+      setTimeout(loadFlightDates, 300);
+      return;
+    }
+    const snap = await window.__firebaseGetDocs(
+      window.__firebaseQuery(
+        window.__firebaseCollection(window.__firebaseDB, 'flights'),
+        window.__firebaseOrderBy('date', 'asc')
+      )
+    );
+    sel.innerHTML = '<option value="">— Select your flight date —</option>';
+    if (snap.empty) {
+      sel.innerHTML = '<option value="">No flights scheduled yet — check back soon</option>';
+      return;
+    }
+    snap.forEach(doc => {
+      const d = doc.data();
+      const opt = document.createElement('option');
+      opt.value = d.date;
+      // Format date nicely: "September 15, 2025 — Fall Flight"
+      const dateLabel = new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+      opt.textContent = d.label ? dateLabel + ' — ' + d.label : dateLabel;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    console.error('Error loading flights:', e);
+    sel.innerHTML = '<option value="">Unable to load flights — please try again</option>';
   }
-});
+}
 
+document.addEventListener('firebase-ready', loadFlightDates);
+
+// ── Form submit ──
 document.getElementById('veteranForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   if (!document.getElementById('attestation').checked) { alert('Please confirm the attestation before submitting.'); return; }
-
+  const oxygenYes = document.querySelector('input[name="requires_oxygen"][value="yes"]')?.checked;
+  if (oxygenYes && !document.getElementById('oxygenLiters').value) {
+    alert('Please select how many liters of oxygen you require.');
+    document.getElementById('oxygenLiters').focus();
+    return;
+  }
   const btn = document.getElementById('submitBtn');
   const msg = document.getElementById('submittingMsg');
   btn.disabled = true;
   msg.textContent = '⏳ Submitting your form securely...';
-
   const formData = new FormData(this);
   const data = { status: 'pending', submitted_at: new Date().toISOString() };
   for (const [key, value] of formData.entries()) {
@@ -454,7 +524,7 @@ document.getElementById('veteranForm').addEventListener('submit', async function
       else data[key] = [data[key], value];
     } else { data[key] = value; }
   }
-
+  data.veteran_name = (data.first_name + ' ' + data.last_name).trim();
   try {
     if (!window.__firebaseReady) throw new Error('Firebase not configured');
     await window.__firebaseAddDoc(
@@ -467,11 +537,7 @@ document.getElementById('veteranForm').addEventListener('submit', async function
     console.error(err);
     msg.textContent = '';
     btn.disabled = false;
-    if (err.message.includes('not configured')) {
-      alert('Firebase is not configured yet. Please contact the Honor Flight team.');
-    } else {
-      alert('Submission error. Please check your connection and try again, or contact the Honor Flight team.');
-    }
+    alert('Submission error. Please check your connection and try again.');
   }
 });
 </script>
