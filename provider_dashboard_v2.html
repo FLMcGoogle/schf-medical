@@ -5,18 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>SCHF — Provider Medical Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-
-<!-- ============================================================
-     FIREBASE CONFIG — SAME CONFIG AS VETERAN FORM
-     ============================================================ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-  // ▼▼▼ PASTE YOUR FIREBASE CONFIG HERE (same as veteran form) ▼▼▼
   const firebaseConfig = {
     apiKey: "AIzaSyA6ejmXphsdbT6xNjKQNjjuTss24m3hOfg",
     authDomain: "schf-medical.firebaseapp.com",
@@ -25,33 +19,13 @@
     messagingSenderId: "632701331445",
     appId: "1:632701331445:web:a3666ba74f7023dc9462bc"
   };
-  // ▲▲▲ END OF CONFIG BLOCK ▲▲▲
-
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
-
-  // Expose to global
   window.FB = { db, auth, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, signInWithEmailAndPassword, signOut, onAuthStateChanged };
   window.FB_READY = true;
   document.dispatchEvent(new Event('firebase-ready'));
 </script>
-
-<style>
-  :root {
-    --navy: #0a1628;
-    --deep: #060e1c;
-    --red: #b22234;
-    --bright-red: #d42b3a;
-    --white: #f0f4ff;
-    --gold: #c8a951;
-    --border: #1e3158;
-    --card-bg: #0d1e38;
-    --oxygen-color: #3b9ef5;
-    --lift-color: #f5a623;
-    --attention-color: #e05252;
-    --lowrisk-color: #4caf7d;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', sans-serif; background: var(--deep); color: var(--white); min-height: 100vh; }
 
@@ -244,6 +218,7 @@
   <div class="tabs">
     <div class="tab active" onclick="switchTab('roster',this)">📋 Roster</div>
     <div class="tab" onclick="switchTab('add',this)">➕ Add</div>
+    <div class="tab" onclick="switchTab('flights',this)">✈️ Flights</div>
     <div class="tab" onclick="switchTab('summary',this)">📊 Summary</div>
   </div>
 
@@ -303,6 +278,38 @@
   <div id="tab-summary" class="app-body" style="display:none">
     <div id="summaryContent"><div class="loading">Loading...</div></div>
   </div>
+
+  <!-- FLIGHTS TAB -->
+  <div id="tab-flights" class="app-body" style="display:none">
+    <div class="add-form-card">
+      <h3>✈️ MANAGE FLIGHT DATES</h3>
+      <p style="font-size:0.82rem; color:#6a88b8; margin-bottom:16px; line-height:1.5">
+        Flight dates added here appear as choices in the veteran intake form dropdown in real time. Veterans will only see the dates you publish below.
+      </p>
+
+      <!-- Add new flight -->
+      <div style="background:rgba(200,169,81,0.07); border:1px solid rgba(200,169,81,0.2); border-radius:10px; padding:14px; margin-bottom:18px;">
+        <p style="font-size:0.72rem; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;">ADD NEW FLIGHT DATE</p>
+        <div class="add-grid">
+          <div class="add-f">
+            <label>Flight Date <span style="color:var(--gold)">*</span></label>
+            <input type="date" id="fd_date">
+          </div>
+          <div class="add-f">
+            <label>Flight Label (optional)</label>
+            <input type="text" id="fd_label" placeholder='e.g. "Fall Flight 2025"'>
+          </div>
+        </div>
+        <button class="btn-save" onclick="addFlightDate()" style="margin-top:4px">+ Add Flight Date</button>
+        <span class="save-ok" id="fdAddOk">✓ Flight date added</span>
+      </div>
+
+      <!-- Existing flights list -->
+      <p style="font-size:0.72rem; font-weight:700; color:#6a88b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;">CURRENT SCHEDULED FLIGHTS</p>
+      <div id="flightDatesList"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+
 </div>
 
 <div id="savingIndicator">✓ Saved</div>
@@ -798,8 +805,91 @@ function switchTab(name, el) {
   el.classList.add('active');
   document.getElementById('tab-roster').style.display = name === 'roster' ? 'block' : 'none';
   document.getElementById('tab-add').style.display = name === 'add' ? 'block' : 'none';
+  document.getElementById('tab-flights').style.display = name === 'flights' ? 'block' : 'none';
   document.getElementById('tab-summary').style.display = name === 'summary' ? 'block' : 'none';
   if (name === 'summary') renderSummary();
+  if (name === 'flights') renderFlightDates();
+}
+
+// ════════════════════════════════════════════════
+//  FLIGHT DATE MANAGEMENT
+// ════════════════════════════════════════════════
+async function renderFlightDates() {
+  const container = document.getElementById('flightDatesList');
+  container.innerHTML = '<div class="loading">Loading...</div>';
+  try {
+    const snap = await window.FB.getDocs(
+      window.FB.query(window.FB.collection(window.FB.db, 'flights'), window.FB.orderBy('date', 'asc'))
+    );
+    if (snap.empty) {
+      container.innerHTML = '<div class="empty">No flight dates added yet. Add one above.</div>';
+      return;
+    }
+    let html = '';
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const dateLabel = new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+      const vetCount = veterans.filter(v => v.flight_date === d.date).length;
+      html += `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <div style="font-weight:700;font-size:0.9rem;color:var(--white)">✈️ ${dateLabel}</div>
+          ${d.label ? `<div style="font-size:0.78rem;color:var(--gold);margin-top:2px">${d.label}</div>` : ''}
+          <div style="font-size:0.72rem;color:#4a6490;margin-top:3px">${vetCount} veteran${vetCount !== 1 ? 's' : ''} registered</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+          <input type="text" value="${d.label||''}" id="flabel-${docSnap.id}" placeholder="Label (optional)"
+            style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Source Sans 3',sans-serif;font-size:0.82rem;padding:6px 10px;outline:none;width:150px;"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+          <button onclick="updateFlightLabel('${docSnap.id}', document.getElementById('flabel-${docSnap.id}').value)"
+            style="background:rgba(200,169,81,0.15);border:1px solid rgba(200,169,81,0.3);color:var(--gold);font-size:0.78rem;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;">Save Label</button>
+          <button onclick="deleteFlightDate('${docSnap.id}', '${dateLabel}', ${vetCount})"
+            style="background:rgba(178,34,52,0.12);border:1px solid rgba(178,34,52,0.3);color:#e07070;font-size:0.78rem;padding:6px 10px;border-radius:6px;cursor:pointer;">🗑 Remove</button>
+        </div>
+      </div>`;
+    });
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div class="empty" style="color:#e07070">Error loading flights: ' + e.message + '</div>';
+  }
+}
+
+async function addFlightDate() {
+  const date = document.getElementById('fd_date').value;
+  const label = document.getElementById('fd_label').value.trim();
+  if (!date) { alert('Please select a date.'); return; }
+  try {
+    const snap = await window.FB.getDocs(window.FB.collection(window.FB.db, 'flights'));
+    if (snap.docs.some(d => d.data().date === date)) { alert('That flight date already exists.'); return; }
+    await window.FB.addDoc(window.FB.collection(window.FB.db, 'flights'), {
+      date, label, createdAt: window.FB.serverTimestamp()
+    });
+    document.getElementById('fd_date').value = '';
+    document.getElementById('fd_label').value = '';
+    const ok = document.getElementById('fdAddOk');
+    ok.classList.add('show');
+    setTimeout(() => ok.classList.remove('show'), 2500);
+    renderFlightDates();
+  } catch(e) { alert('Error adding flight: ' + e.message); }
+}
+
+async function updateFlightLabel(id, label) {
+  try {
+    await window.FB.updateDoc(window.FB.doc(window.FB.db, 'flights', id), { label });
+    showSavingIndicator();
+    renderFlightDates();
+  } catch(e) { alert('Error updating label: ' + e.message); }
+}
+
+async function deleteFlightDate(id, label, vetCount) {
+  const warning = vetCount > 0
+    ? '\n\nWARNING: ' + vetCount + ' veteran(s) are registered for this flight. Their records will remain but the flight date will show as unmatched.'
+    : '';
+  if (!confirm('Remove flight date:\n' + label + '?' + warning)) return;
+  try {
+    await window.FB.deleteDoc(window.FB.doc(window.FB.db, 'flights', id));
+    renderFlightDates();
+  } catch(e) { alert('Error deleting flight: ' + e.message); }
 }
 </script>
 </body>
