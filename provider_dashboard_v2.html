@@ -78,6 +78,12 @@
   .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lowrisk-color); box-shadow: 0 0 5px var(--lowrisk-color); animation: pulse 2s infinite; flex-shrink: 0; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   .btn-back { background: rgba(200,169,81,0.12); border: 1px solid rgba(200,169,81,0.3); color: var(--gold); font-size: 0.75rem; padding: 6px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  /* Veteran row interview states */
+  .vet-row.not-interviewed { background: rgba(178,34,52,0.18); border-left: 3px solid var(--red); }
+  .vet-row.not-interviewed:hover { background: rgba(178,34,52,0.26); }
+  .vet-row.interviewed { background: rgba(10,22,40,0.85); border-left: 3px solid transparent; }
+  .vet-flag-icon { font-size: 1rem; flex-shrink: 0; opacity: 0; transition: opacity 0.3s; }
+  .vet-flag-icon.show { opacity: 1; }
 
   /* TABS */
   .tabs { display: flex; background: var(--navy); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
@@ -277,7 +283,7 @@
       <p id="appFlightSubtitle">Provider Dashboard</p>
     </div>
     <div class="live-dot" title="Live sync"></div>
-    <button class="btn-back" onclick="backToFlights()">← Flights</button>
+    <button class="btn-back" onclick="backToFlights()" title="Back to Flight Selection">🏠 Home</button>
   </div>
   <div class="tabs">
     <div class="tab active" onclick="switchTab('roster',this)">📋 Roster</div>
@@ -293,9 +299,10 @@
     <div class="filter-bar">
       <button class="clear-filter-btn" id="clearFilterBtn" onclick="clearFilter()">✕ Clear Filter</button>
       <select class="sort-select" id="sortSelect" onchange="renderRoster()">
-        <option value="soundoff">Sound-Off #</option>
-        <option value="name">Name</option>
-        <option value="submitted">Submitted</option>
+        <option value="soundoff">Sort: Sound-Off #</option>
+        <option value="name">Sort: Name A–Z</option>
+        <option value="submitted">Sort: Submitted</option>
+        <option value="interviewed">Sort: Interviewed First</option>
       </select>
     </div>
     <div id="rosterList"></div>
@@ -874,7 +881,13 @@ function renderRoster() {
   const sortFn = {
     soundoff: (a,b) => (parseInt(a.patient_number)||999)-(parseInt(b.patient_number)||999),
     name: (a,b) => (a.veteran_name||'').localeCompare(b.veteran_name||''),
-    submitted: (a,b) => (b.submitted_at||'').localeCompare(a.submitted_at||'')
+    submitted: (a,b) => (b.submitted_at||'').localeCompare(a.submitted_at||''),
+    interviewed: (a,b) => {
+      const ai = a.interview_status === 'complete' ? 0 : 1;
+      const bi = b.interview_status === 'complete' ? 0 : 1;
+      if (ai !== bi) return ai - bi;
+      return (parseInt(a.patient_number)||999)-(parseInt(b.patient_number)||999);
+    }
   }[sort] || ((a,b) => (parseInt(a.patient_number)||999)-(parseInt(b.patient_number)||999));
   vets.sort(sortFn);
 
@@ -885,15 +898,18 @@ function renderRoster() {
 
   const rows = vets.map(v => {
     const flags = computeFlags(v);
-    const pf = v.providerFlags || {};
     const isExp = expandedId === v.id;
     const phone = v.phone || '';
+    const isInterviewed = v.interview_status === 'complete';
+    const rowClass = 'vet-row ' + (isInterviewed ? 'interviewed' : 'not-interviewed') + (isExp ? ' expanded' : '');
+    const flagIcon = isInterviewed ? '<span class="vet-flag-icon show">🇺🇸</span>' : '<span class="vet-flag-icon"></span>';
     return '<div class="roster-container" id="rc-'+v.id+'">' +
-      '<div class="vet-row'+(isExp?' expanded':'')+'" onclick="toggleVet(\''+v.id+'\')">' +
+      '<div class="'+rowClass+'" onclick="toggleVet(\''+v.id+'\')">' +
       '<div class="vet-num">'+(v.patient_number||'—')+'</div>' +
       '<div class="vet-info"><div class="vet-name">'+(v.veteran_name||'Unknown')+'</div>' +
       '<div class="vet-meta">'+(phone?'📱 '+phone:'No phone')+'</div></div>' +
       '<div class="vet-badges">'+badgesHTML(flags)+'</div>' +
+      flagIcon +
       '</div>' +
       '<div class="vet-detail'+(isExp?' open':'')+'" id="vd-'+v.id+'">'+buildDetailHTML(v)+'</div>' +
       '</div>';
@@ -993,6 +1009,20 @@ async function fieldChange(id, field, value) {
     if (field === 'patient_number') {
       const numEl = document.querySelector('#rc-'+id+' .vet-num');
       if (numEl) numEl.textContent = value || '—';
+    }
+    if (field === 'interview_status') {
+      // Update row color and flag icon live without full re-render
+      const row = document.querySelector('#rc-'+id+' .vet-row');
+      const flagEl = document.querySelector('#rc-'+id+' .vet-flag-icon');
+      const isComplete = value === 'complete';
+      if (row) {
+        row.classList.remove('interviewed', 'not-interviewed');
+        row.classList.add(isComplete ? 'interviewed' : 'not-interviewed');
+      }
+      if (flagEl) {
+        flagEl.textContent = isComplete ? '🇺🇸' : '';
+        flagEl.classList.toggle('show', isComplete);
+      }
     }
     showSavingIndicator();
   } catch(e) { console.error(e); }
