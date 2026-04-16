@@ -398,10 +398,13 @@
             <div class="inline-row">
               <div class="form-row" style="flex:0 0 auto;min-width:200px">
                 <label>How many liters of oxygen?</label>
-                <select id="a_oxygen_liters" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Source Sans 3',sans-serif;font-size:0.95rem;padding:10px 14px;outline:none;-webkit-appearance:none;">
-                  <option value="">— Select —</option>
-                  <option value="1">1 L/min</option><option value="2">2 L/min</option><option value="3">3 L/min</option><option value="4">4 L/min</option><option value=">4">&gt;4 L/min</option>
-                </select>
+                <div class="radio-group">
+                  <label class="radio-opt"><input type="radio" name="a_oxygen_liters" value="1"> 1 L/min</label>
+                  <label class="radio-opt"><input type="radio" name="a_oxygen_liters" value="2"> 2 L/min</label>
+                  <label class="radio-opt"><input type="radio" name="a_oxygen_liters" value="3"> 3 L/min</label>
+                  <label class="radio-opt"><input type="radio" name="a_oxygen_liters" value="4"> 4 L/min</label>
+                  <label class="radio-opt"><input type="radio" name="a_oxygen_liters" value=">4"> &gt;4 L/min</label>
+                </div>
               </div>
               <div class="form-row" style="flex:1;min-width:180px">
                 <label>More info:</label>
@@ -1157,7 +1160,7 @@ async function addVeteran() {
     // Respiratory
     requires_oxygen: oxyVal,
     oxygen_type: gv('a_oxygen_type'),
-    oxygen_liters: gid('a_oxygen_liters'),
+    oxygen_liters: gv('a_oxygen_liters'),
     oxygen_more_info: gid('a_oxygen_more_info'),
     inhaler: gv('a_inhaler'),
     rescue_inhaler: gv('a_rescue_inhaler'),
@@ -1201,7 +1204,8 @@ async function addVeteran() {
     // Reset all fields
     document.querySelectorAll('#tab-add input[type="text"], #tab-add input[type="tel"], #tab-add input[type="date"], #tab-add input[type="email"], #tab-add textarea').forEach(el => el.value = '');
     document.querySelectorAll('#tab-add input[type="radio"], #tab-add input[type="checkbox"]').forEach(el => el.checked = false);
-    document.querySelectorAll('#tab-add select').forEach(el => el.value = '');
+    // Reset only the actual dropdowns (flight date, sound-off, MD form)
+    ['a_flight','a_soundoff','a_mdform'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     document.querySelectorAll('#tab-add .conditional').forEach(el => el.classList.remove('show'));
     ['oxygen','lift','attention','lowrisk'].forEach(f => { addFlags[f]=false; const el=document.getElementById('aftog-'+f); if(el) el.className='ftog'; });
     const ok = document.getElementById('addOk');
