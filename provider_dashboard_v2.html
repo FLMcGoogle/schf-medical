@@ -77,13 +77,23 @@
   .header-text p { font-size: 0.68rem; color: #6a88b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lowrisk-color); box-shadow: 0 0 5px var(--lowrisk-color); animation: pulse 2s infinite; flex-shrink: 0; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .btn-back { background: rgba(200,169,81,0.12); border: 1px solid rgba(200,169,81,0.3); color: var(--gold); font-size: 0.75rem; padding: 6px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .btn-back { background: linear-gradient(135deg, var(--red), #7a1220); border: 1px solid var(--gold); color: var(--white); font-size: 0.8rem; font-weight: 700; padding: 8px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.04em; }
   /* Veteran row interview states */
-  .vet-row.not-interviewed { background: rgba(178,34,52,0.18); border-left: 3px solid var(--red); }
-  .vet-row.not-interviewed:hover { background: rgba(178,34,52,0.26); }
-  .vet-row.interviewed { background: rgba(10,22,40,0.85); border-left: 3px solid transparent; }
-  .vet-flag-icon { font-size: 1rem; flex-shrink: 0; opacity: 0; transition: opacity 0.3s; }
+  .vet-row.not-interviewed { background: rgba(178,34,52,0.35); border-left: 4px solid var(--red); box-shadow: inset 0 0 0 1px rgba(178,34,52,0.4); }
+  .vet-row.not-interviewed:hover { background: rgba(178,34,52,0.45); }
+  .vet-row.interviewed { background: var(--card-bg); border-left: 4px solid rgba(76,175,125,0.5); }
+  .vet-row.expanded.not-interviewed, .vet-row.expanded.interviewed { background: rgba(200,169,81,0.07); }
+  .vet-flag-icon { font-size: 1.6rem; flex-shrink: 0; width: 28px; text-align: center; opacity: 0; transition: opacity 0.3s; }
   .vet-flag-icon.show { opacity: 1; }
+  .badge-md-missing { background: rgba(224,82,82,0.25); color: #ff6b6b; border: 1px solid rgba(224,82,82,0.5); font-size: 0.62rem; font-weight: 800; padding: 2px 7px; border-radius: 8px; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; animation: flashRed 1.5s infinite; }
+  @keyframes flashRed { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .vet-chevron { font-size: 0.9rem; color: #4a6490; flex-shrink: 0; transition: transform 0.2s; user-select: none; padding: 2px 4px; }
+  .vet-row.expanded .vet-chevron { transform: rotate(180deg); color: var(--gold); }
+  /* Provider radio groups in detail panel */
+  .prov-radio-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .prov-radio-opt { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); font-size: 0.82rem; color: #c8d8ee; user-select: none; transition: all 0.2s; }
+  .prov-radio-opt:has(input:checked) { border-color: var(--gold); background: rgba(200,169,81,0.15); color: var(--gold); font-weight: 600; }
+  .prov-radio-opt input { width: 14px; height: 14px; accent-color: var(--gold); }
 
   /* TABS */
   .tabs { display: flex; background: var(--navy); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
@@ -901,15 +911,23 @@ function renderRoster() {
     const isExp = expandedId === v.id;
     const phone = v.phone || '';
     const isInterviewed = v.interview_status === 'complete';
+    const mdMissing = v.md_form_received === 'no';
     const rowClass = 'vet-row ' + (isInterviewed ? 'interviewed' : 'not-interviewed') + (isExp ? ' expanded' : '');
-    const flagIcon = isInterviewed ? '<span class="vet-flag-icon show">🇺🇸</span>' : '<span class="vet-flag-icon"></span>';
+    const flagIcon = isInterviewed
+      ? '<span class="vet-flag-icon show">🇺🇸</span>'
+      : '<span class="vet-flag-icon"></span>';
+    const chevron = '<span class="vet-chevron">' + (isExp ? '▲' : '▼') + '</span>';
+    const mdBadge = mdMissing ? '<span class="badge-md-missing">⚠ MD Form Missing</span>' : '';
+    // Append MD missing badge to badges row
+    const allBadges = badgesHTML(flags) + mdBadge;
     return '<div class="roster-container" id="rc-'+v.id+'">' +
       '<div class="'+rowClass+'" onclick="toggleVet(\''+v.id+'\')">' +
       '<div class="vet-num">'+(v.patient_number||'—')+'</div>' +
       '<div class="vet-info"><div class="vet-name">'+(v.veteran_name||'Unknown')+'</div>' +
       '<div class="vet-meta">'+(phone?'📱 '+phone:'No phone')+'</div></div>' +
-      '<div class="vet-badges">'+badgesHTML(flags)+'</div>' +
+      '<div class="vet-badges">'+allBadges+'</div>' +
       flagIcon +
+      chevron +
       '</div>' +
       '<div class="vet-detail'+(isExp?' open':'')+'" id="vd-'+v.id+'">'+buildDetailHTML(v)+'</div>' +
       '</div>';
@@ -928,12 +946,19 @@ function clearFilter() {
 }
 
 function toggleVet(id) {
-  expandedId = (expandedId === id) ? null : id;
+  const wasExpanded = expandedId === id;
+  // Close all
   document.querySelectorAll('.vet-row').forEach(r => r.classList.remove('expanded'));
   document.querySelectorAll('.vet-detail').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.vet-chevron').forEach(ch => ch.textContent = '▼');
+  expandedId = wasExpanded ? null : id;
   if (expandedId) {
-    document.querySelector('#rc-'+id+' .vet-row')?.classList.add('expanded');
-    document.getElementById('vd-'+id)?.classList.add('open');
+    const row = document.querySelector('#rc-'+id+' .vet-row');
+    const detail = document.getElementById('vd-'+id);
+    const chev = document.querySelector('#rc-'+id+' .vet-chevron');
+    if (row) row.classList.add('expanded');
+    if (detail) detail.classList.add('open');
+    if (chev) chev.textContent = '▲';
   }
 }
 
@@ -956,6 +981,21 @@ function buildDetailHTML(v) {
   let soOpts = '<option value="">—</option>';
   for(let i=1;i<=35;i++) soOpts += '<option value="'+i+'"'+(v.patient_number==i?' selected':'')+'>'+i+'</option>';
 
+  // MD Form radio buttons
+  const mdRadios =
+    '<div class="prov-radio-group">' +
+    '<label class="prov-radio-opt"><input type="radio" name="md_'+v.id+'" value="yes"'+(mdVal==='yes'?' checked':'')+' onchange="fieldChange(\''+v.id+'\',\'md_form_received\',\'yes\')"> ✅ Received</label>' +
+    '<label class="prov-radio-opt"><input type="radio" name="md_'+v.id+'" value="no"'+(mdVal==='no'?' checked':'')+' onchange="fieldChange(\''+v.id+'\',\'md_form_received\',\'no\')"> ❌ Not Received</label>' +
+    '</div>';
+
+  // Interview status radio buttons
+  const intStatus = v.interview_status || '';
+  const intRadios =
+    '<div class="prov-radio-group">' +
+    '<label class="prov-radio-opt"><input type="radio" name="int_'+v.id+'" value="complete"'+(intStatus==='complete'?' checked':'')+' onchange="fieldChange(\''+v.id+'\',\'interview_status\',\'complete\')"> ✅ Complete</label>' +
+    '<label class="prov-radio-opt"><input type="radio" name="int_'+v.id+'" value="not_complete"'+(intStatus==='not_complete'||intStatus===''?' checked':'')+' onchange="fieldChange(\''+v.id+'\',\'interview_status\',\'not_complete\')"> ❌ Not Complete</label>' +
+    '</div>';
+
   return '<div class="detail-grid">' +
     '<div class="di"><div class="dl">Cell Phone</div><div class="dv">'+(phone?'<a href="tel:'+phone+'">'+phone+'</a>':'—')+'</div></div>' +
     '<div class="di"><div class="dl">Doctor</div><div class="dv">'+(v.doctor_name||v.doctor_info||'—')+(v.doctor_phone?' — '+v.doctor_phone:'')+'</div></div>' +
@@ -974,17 +1014,17 @@ function buildDetailHTML(v) {
     '<hr class="sep">' +
     '<div class="prov-section">' +
     '<h4>⚕️ Provider Assessment</h4>' +
-    '<div class="soundoff-row"><label>SOUND-OFF #</label><select class="soundoff-select" onchange="fieldChange(\''+v.id+'\',\'patient_number\',this.value)">'+soOpts+'</select><span style="font-size:0.72rem;color:#4a6490;margin-left:8px">Manifest number</span></div>' +
-    '<div class="prov-fields">' +
-    '<div class="pf"><label>MD Form Status</label><select onchange="fieldChange(\''+v.id+'\',\'md_form_received\',this.value)"><option value="" '+((!mdVal)?'selected':'')+'>— Select —</option><option value="yes" '+(mdVal==='yes'?'selected':'')+'>✅ Received</option><option value="no" '+(mdVal==='no'?'selected':'')+'>❌ Not Received</option><option value="pending" '+(mdVal==='pending'?'selected':'')+'>⏳ Pending</option></select></div>' +
-    '<div class="pf"><label>Interview Status</label><select onchange="fieldChange(\''+v.id+'\',\'interview_status\',this.value)"><option value="" '+(!v.interview_status?'selected':'')+'>— Select —</option><option value="scheduled" '+(v.interview_status==='scheduled'?'selected':'')+'>📅 Scheduled</option><option value="complete" '+(v.interview_status==='complete'?'selected':'')+'>✅ Complete</option><option value="no_show" '+(v.interview_status==='no_show'?'selected':'')+'>❌ No Show</option></select></div>' +
-    '</div>' +
-    '<p style="font-size:0.7rem;color:#6a88b8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:7px;">Override Flags</p>' +
-    '<div class="flag-toggles">' +
+    '<div class="soundoff-row"><label>SOUND-OFF #</label><select class="soundoff-select" onchange="fieldChange(\''+v.id+'\',\'patient_number\',this.value)">'+soOpts+'</select></div>' +
+    '<p style="font-size:0.7rem;color:#6a88b8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:7px;margin-top:12px;">Override Flags</p>' +
+    '<div class="flag-toggles" style="margin-bottom:14px">' +
     '<div class="ftog '+(pf.oxygen?'on-oxygen':'')+'" id="ftog-oxygen-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'oxygen\')">🫁 Oxygen</div>' +
     '<div class="ftog '+(pf.lift?'on-lift':'')+'" id="ftog-lift-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'lift\')">🏋️ Lift</div>' +
     '<div class="ftog '+(pf.attention?'on-attention':'')+'" id="ftog-attention-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'attention\')">⚠️ Attention</div>' +
     '<div class="ftog '+(pf.lowrisk?'on-lowrisk':'')+'" id="ftog-lowrisk-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'lowrisk\')">✅ Low Risk</div>' +
+    '</div>' +
+    '<div class="prov-fields">' +
+    '<div class="pf"><label>MD Form</label>'+mdRadios+'</div>' +
+    '<div class="pf"><label>Interview Status</label>'+intRadios+'</div>' +
     '</div>' +
     '<p style="font-size:0.7rem;color:#6a88b8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;margin-top:10px;">Provider Notes</p>' +
     '<textarea class="notes-input" id="pnotes-'+v.id+'" placeholder="Clinical notes, interview observations, day-of instructions...">'+(v.providerNotes||'')+'</textarea>' +
@@ -1011,7 +1051,6 @@ async function fieldChange(id, field, value) {
       if (numEl) numEl.textContent = value || '—';
     }
     if (field === 'interview_status') {
-      // Update row color and flag icon live without full re-render
       const row = document.querySelector('#rc-'+id+' .vet-row');
       const flagEl = document.querySelector('#rc-'+id+' .vet-flag-icon');
       const isComplete = value === 'complete';
@@ -1022,6 +1061,18 @@ async function fieldChange(id, field, value) {
       if (flagEl) {
         flagEl.textContent = isComplete ? '🇺🇸' : '';
         flagEl.classList.toggle('show', isComplete);
+      }
+    }
+    if (field === 'md_form_received') {
+      // Update MD missing badge live
+      const badgesEl = document.querySelector('#rc-'+id+' .vet-badges');
+      if (badgesEl) {
+        const existing = badgesEl.querySelector('.badge-md-missing');
+        if (value === 'no' && !existing) {
+          badgesEl.insertAdjacentHTML('beforeend', '<span class="badge-md-missing">⚠ MD Form Missing</span>');
+        } else if (value !== 'no' && existing) {
+          existing.remove();
+        }
       }
     }
     showSavingIndicator();
