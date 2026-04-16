@@ -201,6 +201,30 @@
   .flight-date-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; flex-wrap: wrap; }
 
   /* MISC */
+  /* Section cards in Add tab — match veteran form style */
+  #tab-add .section-card { background: rgba(10,22,40,0.85); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+  #tab-add .section-header { display: flex; align-items: center; gap: 10px; padding: 13px 18px; background: linear-gradient(90deg, rgba(178,34,52,0.3), rgba(10,22,40,0)); border-bottom: 1px solid var(--border); }
+  #tab-add .section-header h2 { font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em; }
+  #tab-add .section-body { padding: 16px 18px; }
+  #tab-add .form-row { margin-bottom: 16px; }
+  #tab-add .form-row label { display: block; font-size: 0.88rem; font-weight: 600; color: #c8d8ee; margin-bottom: 6px; line-height: 1.4; }
+  #tab-add .form-row input[type="text"], #tab-add .form-row input[type="tel"], #tab-add .form-row input[type="date"], #tab-add .form-row input[type="email"], #tab-add .form-row textarea, #tab-add .form-row select { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 6px; color: var(--white); font-family: 'Source Sans 3', sans-serif; font-size: 0.92rem; padding: 10px 13px; outline: none; -webkit-appearance: none; transition: border-color 0.2s; }
+  #tab-add .form-row input:focus, #tab-add .form-row textarea:focus, #tab-add .form-row select:focus { border-color: var(--gold); background: rgba(255,255,255,0.09); }
+  #tab-add .form-row textarea { resize: vertical; min-height: 75px; }
+  #tab-add .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  #tab-add .inline-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  #tab-add .inline-row .form-row { flex: 1; min-width: 140px; }
+  @media (max-width:500px) { #tab-add .two-col { grid-template-columns: 1fr; } }
+  #tab-add .radio-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  #tab-add .radio-opt, #tab-add .check-opt { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); font-size: 0.88rem; color: #c8d8ee; user-select: none; transition: all 0.2s; }
+  #tab-add .radio-opt:has(input:checked), #tab-add .check-opt:has(input:checked) { border-color: var(--gold); background: rgba(200,169,81,0.15); color: var(--gold); font-weight: 600; }
+  #tab-add .radio-opt input, #tab-add .check-opt input { width: 15px; height: 15px; accent-color: var(--gold); }
+  #tab-add .conditional { display: none; margin-top: 12px; padding: 13px; background: rgba(255,255,255,0.04); border-left: 3px solid #4a7fc1; border-radius: 0 6px 6px 0; }
+  #tab-add .conditional.show { display: block; }
+  #tab-add .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 9px; }
+  #tab-add .required { color: var(--gold); }
+  .btn-submit-add { background: linear-gradient(135deg, var(--red), #8b1a28); color: white; border: 2px solid var(--gold); font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.1em; padding: 14px 36px; border-radius: 50px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; box-shadow: 0 4px 20px rgba(178,34,52,0.4); width: 100%; margin-top: 6px; }
+  .btn-submit-add:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(178,34,52,0.6); }
   .loading { text-align: center; padding: 40px; color: #4a6490; }
   .empty { text-align: center; padding: 40px; color: #3a5070; font-size: 0.9rem; }
   #savingIndicator { position: fixed; bottom: 16px; right: 16px; background: rgba(76,175,125,0.9); color: white; font-size: 0.82rem; font-weight: 600; padding: 8px 16px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; }
@@ -279,158 +303,335 @@
 
   <!-- ADD TAB -->
   <div id="tab-add" class="app-body" style="display:none">
-    <div class="add-form-card">
-      <h3>➕ ADD VETERAN — WALK-IN / INTERVIEW</h3>
 
-      <div class="add-section-label">Identity</div>
-      <div class="add-grid">
-        <div class="add-f"><label>First Name *</label><input type="text" id="a_first" placeholder="First"></div>
-        <div class="add-f"><label>Last Name *</label><input type="text" id="a_last" placeholder="Last"></div>
-        <div class="add-f"><label>Cell Phone *</label><input type="tel" id="a_phone" placeholder="321-555-0000" oninput="fmtPhone(this)"></div>
-        <div class="add-f">
-          <label>Flight Date *</label>
-          <select id="a_flight"><option value="">Loading...</option></select>
+    <!-- IDENTITY -->
+    <div class="section-card">
+      <div class="section-header"><span>🎖️</span><h2>Veteran Information</h2></div>
+      <div class="section-body">
+        <div class="two-col">
+          <div class="form-row"><label>First Name <span class="required">*</span></label><input type="text" id="a_first" placeholder="First name"></div>
+          <div class="form-row"><label>Last Name <span class="required">*</span></label><input type="text" id="a_last" placeholder="Last name"></div>
         </div>
-        <div class="add-f">
-          <label>Sound-Off # </label>
-          <select id="a_soundoff">
-            <option value="">— Assign —</option>
-            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option>
-          </select>
+        <div class="two-col">
+          <div class="form-row"><label>Cell Phone <span class="required">*</span></label><input type="tel" id="a_phone" placeholder="321-555-0000" oninput="fmtPhone(this)"></div>
+          <div class="form-row"><label>Date of Birth</label><input type="date" id="a_dob"></div>
         </div>
-        <div class="add-f"><label>Doctor Name</label><input type="text" id="a_doctor_name" placeholder="Dr. Smith"></div>
-        <div class="add-f"><label>Doctor Phone</label><input type="tel" id="a_doctor_phone" placeholder="321-555-1234" oninput="fmtPhone(this)"></div>
-        <div class="add-f">
-          <label>MD Form</label>
-          <select id="a_mdform">
-            <option value="">— Select —</option>
-            <option value="yes">✅ Received</option>
-            <option value="no">❌ Not Received</option>
-            <option value="pending">⏳ Pending</option>
-          </select>
+        <div class="two-col">
+          <div class="form-row">
+            <label>Flight Date <span class="required">*</span></label>
+            <select id="a_flight" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Source Sans 3',sans-serif;font-size:0.95rem;padding:10px 14px;outline:none;-webkit-appearance:none;"><option value="">Loading...</option></select>
+          </div>
+          <div class="form-row"><label>Email Address</label><input type="email" id="a_email" placeholder="email@example.com"></div>
+        </div>
+        <div class="two-col">
+          <div class="form-row"><label>Doctor's Name <span class="required">*</span></label><input type="text" id="a_doctor_name" placeholder="Dr. Smith"></div>
+          <div class="form-row"><label>Doctor's Phone <span class="required">*</span></label><input type="tel" id="a_doctor_phone" placeholder="321-555-1234" oninput="fmtPhone(this)"></div>
+        </div>
+        <div class="two-col">
+          <div class="form-row">
+            <label>Sound-Off #</label>
+            <select id="a_soundoff" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Source Sans 3',sans-serif;font-size:0.95rem;padding:10px 14px;outline:none;-webkit-appearance:none;">
+              <option value="">— Assign —</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>MD Form</label>
+            <select id="a_mdform" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Source Sans 3',sans-serif;font-size:0.95rem;padding:10px 14px;outline:none;-webkit-appearance:none;">
+              <option value="">— Select —</option>
+              <option value="yes">✅ Received</option>
+              <option value="no">❌ Not Received</option>
+              <option value="pending">⏳ Pending</option>
+            </select>
+          </div>
         </div>
       </div>
-
-      <div class="add-section-label">Medical Interview</div>
-      <div class="add-grid">
-        <div class="add-f">
-          <label>Uses Oxygen?</label>
-          <select id="a_oxygen" onchange="addToggleOxygen()">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f" id="a_oxygen_detail" style="display:none">
-          <label>Constant or PRN?</label>
-          <select id="a_oxygen_type">
-            <option value="">— Select —</option>
-            <option value="constant">Constant</option>
-            <option value="prn">PRN (as needed)</option>
-          </select>
-        </div>
-        <div class="add-f" id="a_oxygen_liters_wrap" style="display:none">
-          <label>Liters / min</label>
-          <select id="a_oxygen_liters">
-            <option value="">— Select —</option>
-            <option value="1">1 L/min</option>
-            <option value="2">2 L/min</option>
-            <option value="3">3 L/min</option>
-            <option value="4">4 L/min</option>
-            <option value=">4">&gt;4 L/min</option>
-          </select>
-        </div>
-        <div class="add-f">
-          <label>Uses Insulin?</label>
-          <select id="a_insulin" onchange="addToggleInsulin()">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f" id="a_insulin_help_wrap" style="display:none">
-          <label>Needs Help Injecting?</label>
-          <select id="a_insulin_help">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f">
-          <label>Uses Fluid Pills?</label>
-          <select id="a_fluid_pills">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f">
-          <label>On Dialysis?</label>
-          <select id="a_dialysis">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f">
-          <label>Assistive Devices?</label>
-          <select id="a_mobility_help" onchange="addToggleMobility()">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f" id="a_mobility_device_wrap" style="display:none">
-          <label>Device Used</label>
-          <select id="a_mobility_aid">
-            <option value="">— Select —</option>
-            <option value="Cane">Cane</option>
-            <option value="Walker">Walker</option>
-            <option value="Wheelchair">Wheelchair</option>
-            <option value="Scooter">Scooter</option>
-          </select>
-        </div>
-        <div class="add-f">
-          <label>Bus Step Concerns?</label>
-          <select id="a_bus_steps">
-            <option value="">— Select —</option>
-            <option value="yes">Yes — needs LIFT</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f">
-          <label>Flying Concerns?</label>
-          <select id="a_flying">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-        <div class="add-f">
-          <label>Higher Risk for Flight?</label>
-          <select id="a_higher_risk">
-            <option value="">— Select —</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="add-section-label">Flags (auto-set from answers above — override here)</div>
-      <div class="flag-toggles" id="addFlagToggles">
-        <div class="ftog" id="aftog-oxygen" onclick="toggleAddFlag('oxygen')">🫁 Oxygen</div>
-        <div class="ftog" id="aftog-lift" onclick="toggleAddFlag('lift')">🏋️ Lift</div>
-        <div class="ftog" id="aftog-attention" onclick="toggleAddFlag('attention')">⚠️ Attention</div>
-        <div class="ftog" id="aftog-lowrisk" onclick="toggleAddFlag('lowrisk')">✅ Low Risk</div>
-      </div>
-
-      <div class="add-section-label">Notes on Risk / Issues</div>
-      <textarea class="notes-input" id="a_notes" placeholder="Clinical notes, risk concerns, special instructions..." style="margin-bottom:14px"></textarea>
-
-      <button class="btn-save" onclick="addVeteran()">+ Add to Roster</button>
-      <span class="save-ok" id="addOk">✓ Added</span>
     </div>
-  </div>
+
+    <!-- GENERAL -->
+    <div class="section-card">
+      <div class="section-header"><span>🏥</span><h2>General Medical History</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Have you been hospitalized in the last 6 months?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_hospitalized" value="yes" onchange="atoggle('a_hospitalized_reason',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_hospitalized" value="no" onchange="atoggle('a_hospitalized_reason',false)"> No</label>
+          </div>
+          <div id="a_hospitalized_reason" class="conditional">
+            <label>Reason for hospitalization:</label>
+            <textarea id="a_hospitalized_reason_txt" placeholder="Please describe..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Do you have any metal implants or devices?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_metal_implants" value="yes" onchange="atoggle('a_metal_type',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_metal_implants" value="no" onchange="atoggle('a_metal_type',false)"> No</label>
+          </div>
+          <div id="a_metal_type" class="conditional">
+            <label>Type:</label>
+            <textarea id="a_metal_implants_type" placeholder="Please describe the type of implant or device..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESPIRATORY -->
+    <div class="section-card">
+      <div class="section-header"><span>🫁</span><h2>Respiratory</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Will the veteran require oxygen for the trip?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_requires_oxygen" value="yes" onchange="atoggle('a_oxygen_detail',true);autoFlag('oxygen',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_requires_oxygen" value="no" onchange="atoggle('a_oxygen_detail',false);autoFlag('oxygen',false)"> No</label>
+          </div>
+          <div id="a_oxygen_detail" class="conditional">
+            <div class="form-row">
+              <label>Oxygen usage:</label>
+              <div class="radio-group">
+                <label class="radio-opt"><input type="radio" name="a_oxygen_type" value="constant"> All the time (Constant)</label>
+                <label class="radio-opt"><input type="radio" name="a_oxygen_type" value="prn"> As needed (PRN)</label>
+              </div>
+            </div>
+            <div class="inline-row">
+              <div class="form-row" style="flex:0 0 auto;min-width:200px">
+                <label>How many liters of oxygen?</label>
+                <select id="a_oxygen_liters" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Source Sans 3',sans-serif;font-size:0.95rem;padding:10px 14px;outline:none;-webkit-appearance:none;">
+                  <option value="">— Select —</option>
+                  <option value="1">1 L/min</option><option value="2">2 L/min</option><option value="3">3 L/min</option><option value="4">4 L/min</option><option value=">4">&gt;4 L/min</option>
+                </select>
+              </div>
+              <div class="form-row" style="flex:1;min-width:180px">
+                <label>More info:</label>
+                <input type="text" id="a_oxygen_more_info" placeholder="Any additional oxygen details...">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Does the veteran require an inhaler for shortness of breath (asthma/COPD)?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_inhaler" value="yes" onchange="atoggle('a_inhaler_rescue',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_inhaler" value="no" onchange="atoggle('a_inhaler_rescue',false)"> No</label>
+          </div>
+          <div id="a_inhaler_rescue" class="conditional">
+            <label>Does the veteran carry a rescue inhaler?</label>
+            <div class="radio-group" style="margin-top:8px">
+              <label class="radio-opt"><input type="radio" name="a_rescue_inhaler" value="yes"> Yes</label>
+              <label class="radio-opt"><input type="radio" name="a_rescue_inhaler" value="no"> No</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDIAC -->
+    <div class="section-card">
+      <div class="section-header"><span>❤️</span><h2>Cardiac</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Does the veteran have unstable angina?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_unstable_angina" value="yes" onchange="autoFlag('attention',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_unstable_angina" value="no"> No</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Does the veteran require nitroglycerin?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_nitroglycerin" value="yes"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_nitroglycerin" value="no"> No</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Does the veteran have a pacemaker or internal defibrillator?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_pacemaker" value="yes" onchange="autoFlag('attention',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_pacemaker" value="no"> No</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENDOCRINE -->
+    <div class="section-card">
+      <div class="section-header"><span>💉</span><h2>Endocrine</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Does the veteran use insulin for diabetes?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_insulin" value="yes" onchange="atoggle('a_insulin_help',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_insulin" value="no" onchange="atoggle('a_insulin_help',false)"> No</label>
+          </div>
+          <div id="a_insulin_help" class="conditional">
+            <label>Will the veteran need help giving themselves insulin?</label>
+            <div class="radio-group" style="margin-top:8px">
+              <label class="radio-opt"><input type="radio" name="a_insulin_help_needed" value="yes" onchange="autoFlag('attention',true)"> Yes</label>
+              <label class="radio-opt"><input type="radio" name="a_insulin_help_needed" value="no"> No</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RENAL -->
+    <div class="section-card">
+      <div class="section-header"><span>🫘</span><h2>Renal</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Does the veteran take fluid pills (diuretics)?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_fluid_pills" value="yes"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_fluid_pills" value="no"> No</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Is the veteran on dialysis?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_dialysis" value="yes" onchange="atoggle('a_dialysis_days',true);autoFlag('attention',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_dialysis" value="no" onchange="atoggle('a_dialysis_days',false)"> No</label>
+          </div>
+          <div id="a_dialysis_days" class="conditional">
+            <label>Dialysis days (select all that apply):</label>
+            <div class="check-grid" style="margin-top:10px">
+              <label class="check-opt"><input type="checkbox" name="a_dialysis_day" value="Mon"> Monday</label>
+              <label class="check-opt"><input type="checkbox" name="a_dialysis_day" value="Tue"> Tuesday</label>
+              <label class="check-opt"><input type="checkbox" name="a_dialysis_day" value="Wed"> Wednesday</label>
+              <label class="check-opt"><input type="checkbox" name="a_dialysis_day" value="Thu"> Thursday</label>
+              <label class="check-opt"><input type="checkbox" name="a_dialysis_day" value="Fri"> Friday</label>
+              <label class="check-opt"><input type="checkbox" name="a_dialysis_day" value="Sat"> Saturday</label>
+              <label class="check-opt"><input type="checkbox" name="a_dialysis_day" value="Sun"> Sunday</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEURO -->
+    <div class="section-card">
+      <div class="section-header"><span>🧠</span><h2>Neurological</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Does the veteran have any neurologic conditions affecting their abilities?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_neuro" value="yes" onchange="atoggle('a_neuro_detail',true);autoFlag('attention',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_neuro" value="no" onchange="atoggle('a_neuro_detail',false)"> No</label>
+          </div>
+          <div id="a_neuro_detail" class="conditional">
+            <label>Please describe:</label>
+            <textarea id="a_neuro_conditions" placeholder="e.g., Parkinson's, stroke, dementia..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILITY -->
+    <div class="section-card">
+      <div class="section-header"><span>♿</span><h2>Mobility</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Does the veteran have concerns about going up/down 6 steps to get on/off the bus?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_bus_steps" value="yes" onchange="autoFlag('lift',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_bus_steps" value="no"> No</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Does the veteran require help with mobility/getting around?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_mobility_help" value="yes" onchange="atoggle('a_mobility_aids',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_mobility_help" value="no" onchange="atoggle('a_mobility_aids',false)"> No</label>
+          </div>
+          <div id="a_mobility_aids" class="conditional">
+            <label>What do they use? (select all that apply)</label>
+            <div class="check-grid" style="margin-top:10px">
+              <label class="check-opt"><input type="checkbox" name="a_mobility_aid" value="Scooter"> Scooter</label>
+              <label class="check-opt"><input type="checkbox" name="a_mobility_aid" value="Wheelchair"> Wheelchair</label>
+              <label class="check-opt"><input type="checkbox" name="a_mobility_aid" value="Walker"> Walker</label>
+              <label class="check-opt"><input type="checkbox" name="a_mobility_aid" value="Cane"> Cane</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Will the veteran need a wheelchair to get on and off the airplane?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_airport_wheelchair" value="yes" onchange="autoFlag('lift',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_airport_wheelchair" value="no"> No</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHER -->
+    <div class="section-card">
+      <div class="section-header"><span>📋</span><h2>Other Special Needs</h2></div>
+      <div class="section-body">
+        <div class="form-row">
+          <label>Is the veteran currently being treated for cancer?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_cancer" value="yes" onchange="atoggle('a_cancer_detail',true);autoFlag('attention',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_cancer" value="no" onchange="atoggle('a_cancer_detail',false)"> No</label>
+          </div>
+          <div id="a_cancer_detail" class="conditional">
+            <label>Is the veteran currently undergoing chemo or radiation?</label>
+            <div class="radio-group" style="margin-top:8px">
+              <label class="radio-opt"><input type="radio" name="a_chemo_radiation" value="yes"> Yes</label>
+              <label class="radio-opt"><input type="radio" name="a_chemo_radiation" value="no"> No</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Does the veteran have any problems flying?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_flying_problems" value="yes" onchange="atoggle('a_flying_detail',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_flying_problems" value="no" onchange="atoggle('a_flying_detail',false)"> No</label>
+          </div>
+          <div id="a_flying_detail" class="conditional">
+            <label>Please describe:</label>
+            <textarea id="a_flying_problems_description" placeholder="Please describe concerns with flying..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Is the veteran higher risk for the flight?</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="a_higher_risk" value="yes" onchange="autoFlag('attention',true)"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_higher_risk" value="no"> No</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Special dietary requirements or food allergies:</label>
+          <textarea id="a_dietary" placeholder="List any dietary restrictions or allergies..."></textarea>
+        </div>
+        <div class="form-row">
+          <label>Other diagnoses, special medical needs, or concerns not listed above:</label>
+          <textarea id="a_other_concerns" placeholder="Please describe any other conditions or concerns..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLAGS + SUBMIT -->
+    <div class="section-card">
+      <div class="section-header"><span>🚩</span><h2>Flags &amp; Provider Notes</h2></div>
+      <div class="section-body">
+        <p style="font-size:0.85rem;color:#6a88b8;margin-bottom:12px;line-height:1.5">Flags are set automatically based on answers above. Override here if needed.</p>
+        <div class="flag-toggles" id="addFlagToggles">
+          <div class="ftog" id="aftog-oxygen" onclick="toggleAddFlag('oxygen')">🫁 Oxygen</div>
+          <div class="ftog" id="aftog-lift" onclick="toggleAddFlag('lift')">🏋️ Lift</div>
+          <div class="ftog" id="aftog-attention" onclick="toggleAddFlag('attention')">⚠️ Attention</div>
+          <div class="ftog" id="aftog-lowrisk" onclick="toggleAddFlag('lowrisk')">✅ Low Risk</div>
+        </div>
+        <div class="form-row" style="margin-top:14px">
+          <label>Notes on Risk / Issues:</label>
+          <textarea class="notes-input" id="a_notes" placeholder="Clinical notes, risk concerns, special instructions..."></textarea>
+        </div>
+        <button class="btn-submit-add" onclick="addVeteran()">➕ &nbsp;Add Veteran to Roster</button>
+        <span class="save-ok" id="addOk" style="display:inline-block;margin-top:10px">✓ Added successfully</span>
+      </div>
+    </div>
+
+  </div><!-- end tab-add -->
 
   <!-- SUMMARY TAB -->
   <div id="tab-summary" class="app-body" style="display:none">
@@ -862,6 +1063,21 @@ function addToggleMobility() {
   document.getElementById('a_mobility_device_wrap').style.display = show ? 'block' : 'none';
 }
 
+// atoggle: show/hide conditional sections in the Add tab
+function atoggle(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('show', show);
+}
+
+// autoFlag: automatically set a flag based on a yes answer
+function autoFlag(type, on) {
+  if (on) {
+    addFlags[type] = true;
+    const el = document.getElementById('aftog-'+type);
+    if (el) el.className = 'ftog on-'+type;
+  }
+}
+
 function toggleAddFlag(type) {
   addFlags[type] = !addFlags[type];
   document.getElementById('aftog-'+type).className = 'ftog'+(addFlags[type]?' on-'+type:'');
@@ -894,40 +1110,86 @@ async function addVeteran() {
   if (!phone) { alert('Cell phone required.'); return; }
   if (!flight) { alert('Please select a flight date.'); return; }
 
-  // Auto-compute flags from answers
-  const oxyVal = document.getElementById('a_oxygen').value;
-  const busVal = document.getElementById('a_bus_steps').value;
-  const insulinHelp = document.getElementById('a_insulin_help').value;
-  const dialysis = document.getElementById('a_dialysis').value;
-  const higherRisk = document.getElementById('a_higher_risk').value;
+  // Read all radio values
+  const gv = (name) => { const el = document.querySelector('input[name="'+name+'"]:checked'); return el ? el.value : ''; };
+  const gid = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+
+  // Collect dialysis days checkboxes
+  const dialysisDays = [...document.querySelectorAll('input[name="a_dialysis_day"]:checked')].map(c=>c.value);
+  // Collect mobility aids checkboxes
+  const mobilityAids = [...document.querySelectorAll('input[name="a_mobility_aid"]:checked')].map(c=>c.value);
+
+  const oxyVal = gv('a_requires_oxygen');
+  const busVal = gv('a_bus_steps');
+  const airWheelchair = gv('a_airport_wheelchair');
+  const insulinVal = gv('a_insulin');
+  const insulinHelp = gv('a_insulin_help_needed');
+  const dialysisVal = gv('a_dialysis');
+  const higherRisk = gv('a_higher_risk');
+  const neuroVal = gv('a_neuro');
+  const cancerVal = gv('a_cancer');
+  const pacemaker = gv('a_pacemaker');
+  const unstableAngina = gv('a_unstable_angina');
+
   const autoFlags = {
     oxygen: oxyVal==='yes' || addFlags.oxygen,
-    lift: busVal==='yes' || addFlags.lift,
-    attention: insulinHelp==='yes' || dialysis==='yes' || higherRisk==='yes' || addFlags.attention,
+    lift: busVal==='yes' || airWheelchair==='yes' || addFlags.lift,
+    attention: insulinHelp==='yes' || dialysisVal==='yes' || higherRisk==='yes' || neuroVal==='yes' || pacemaker==='yes' || unstableAngina==='yes' || addFlags.attention,
     lowrisk: addFlags.lowrisk
   };
 
   const record = {
     veteran_name: first + ' ' + last,
     first_name: first, last_name: last,
-    phone, flight_date: flight,
-    patient_number: document.getElementById('a_soundoff').value,
-    doctor_name: document.getElementById('a_doctor_name').value.trim(),
-    doctor_phone: document.getElementById('a_doctor_phone').value.trim(),
-    md_form_received: document.getElementById('a_mdform').value,
-    requires_oxygen: oxyVal||'',
-    oxygen_type: document.getElementById('a_oxygen_type').value,
-    oxygen_liters: document.getElementById('a_oxygen_liters').value,
-    insulin: document.getElementById('a_insulin').value,
-    insulin_help_needed: document.getElementById('a_insulin_help').value,
-    fluid_pills: document.getElementById('a_fluid_pills').value,
-    dialysis: dialysis,
+    phone,
+    dob: gid('a_dob'),
+    email: gid('a_email'),
+    flight_date: flight,
+    patient_number: gid('a_soundoff'),
+    doctor_name: gid('a_doctor_name'),
+    doctor_phone: gid('a_doctor_phone'),
+    md_form_received: gid('a_mdform'),
+    // General
+    hospitalized: gv('a_hospitalized'),
+    hospitalized_reason: gid('a_hospitalized_reason_txt'),
+    metal_implants: gv('a_metal_implants'),
+    metal_implants_type: gid('a_metal_implants_type'),
+    // Respiratory
+    requires_oxygen: oxyVal,
+    oxygen_type: gv('a_oxygen_type'),
+    oxygen_liters: gid('a_oxygen_liters'),
+    oxygen_more_info: gid('a_oxygen_more_info'),
+    inhaler: gv('a_inhaler'),
+    rescue_inhaler: gv('a_rescue_inhaler'),
+    // Cardiac
+    unstable_angina: unstableAngina,
+    nitroglycerin: gv('a_nitroglycerin'),
+    pacemaker: pacemaker,
+    // Endocrine
+    insulin: insulinVal,
+    insulin_help_needed: insulinHelp,
+    // Renal
+    fluid_pills: gv('a_fluid_pills'),
+    dialysis: dialysisVal,
+    dialysis_day: dialysisDays,
+    // Neuro
+    neuro: neuroVal,
+    neuro_conditions: gid('a_neuro_conditions'),
+    // Mobility
     bus_steps: busVal,
-    mobility_help: document.getElementById('a_mobility_help').value,
-    mobility_aid: document.getElementById('a_mobility_aid').value,
-    flying_problems: document.getElementById('a_flying').value,
+    mobility_help: gv('a_mobility_help'),
+    mobility_aid: mobilityAids,
+    airport_wheelchair: airWheelchair,
+    // Other
+    cancer: cancerVal,
+    chemo_radiation: gv('a_chemo_radiation'),
+    flying_problems: gv('a_flying_problems'),
+    flying_problems_description: gid('a_flying_problems_description'),
     higher_risk: higherRisk,
-    providerNotes: document.getElementById('a_notes').value.trim(),
+    dietary: gid('a_dietary'),
+    other_concerns: gid('a_other_concerns'),
+    // Provider
+    providerNotes: gid('a_notes'),
     providerFlags: autoFlags,
     submitted_at: new Date().toISOString(),
     status: 'provider_added', manual_entry: true,
@@ -936,11 +1198,12 @@ async function addVeteran() {
 
   try {
     await window.FB.addDoc(window.FB.collection(window.FB.db,'veterans'), record);
-    // Reset
-    ['a_first','a_last','a_phone','a_doctor_name','a_doctor_phone','a_notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-    ['a_oxygen','a_insulin','a_fluid_pills','a_dialysis','a_mobility_help','a_bus_steps','a_flying','a_higher_risk','a_mdform','a_soundoff','a_oxygen_type','a_oxygen_liters','a_mobility_aid'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-    ['oxygen','lift','attention','lowrisk'].forEach(f => { addFlags[f]=false; document.getElementById('aftog-'+f).className='ftog'; });
-    ['a_oxygen_detail','a_oxygen_liters_wrap','a_insulin_help_wrap','a_mobility_device_wrap'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+    // Reset all fields
+    document.querySelectorAll('#tab-add input[type="text"], #tab-add input[type="tel"], #tab-add input[type="date"], #tab-add input[type="email"], #tab-add textarea').forEach(el => el.value = '');
+    document.querySelectorAll('#tab-add input[type="radio"], #tab-add input[type="checkbox"]').forEach(el => el.checked = false);
+    document.querySelectorAll('#tab-add select').forEach(el => el.value = '');
+    document.querySelectorAll('#tab-add .conditional').forEach(el => el.classList.remove('show'));
+    ['oxygen','lift','attention','lowrisk'].forEach(f => { addFlags[f]=false; const el=document.getElementById('aftog-'+f); if(el) el.className='ftog'; });
     const ok = document.getElementById('addOk');
     ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'),2500);
     // Switch to roster
