@@ -772,10 +772,12 @@ async function loadFlightPicker() {
       const flightVets = allVets.filter(v => v.flight_date === f.date);
       const oCount = flightVets.filter(v => computeFlags(v).oxygen).length;
       const lCount = flightVets.filter(v => computeFlags(v).lift).length;
+      const plCount = flightVets.filter(v => computeFlags(v)['possible-lift']).length;
       const aCount = flightVets.filter(v => computeFlags(v).attention).length;
       const badges = [
         oCount ? '<span class="badge badge-oxygen">O₂ ×'+oCount+'</span>' : '',
         lCount ? '<span class="badge badge-lift">Lift ×'+lCount+'</span>' : '',
+        plCount ? '<span class="badge badge-possible-lift">P.Lift ×'+plCount+'</span>' : '',
         aCount ? '<span class="badge badge-attention">Attn ×'+aCount+'</span>' : '',
       ].filter(Boolean).join('');
       html += '<div class="flight-pick-card" onclick="selectFlight(\''+f.id+'\',\''+f.date+'\',\''+encodeURIComponent(f.label||'')+'\',\''+encodeURIComponent(dateLabel)+'\')">';
@@ -1430,7 +1432,12 @@ async function renderContacts() {
   const container = document.getElementById('contactsList');
   const filterSel = document.getElementById('ctFlightFilter');
   if (!container) return;
-  container.innerHTML = '<div class="loading">Loading...</div>';
+  // Must be authenticated to read contacts
+  if (!window.FB.auth.currentUser) {
+    container.innerHTML = '<div class="empty">Not authenticated. Please sign in again.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="loading">Loading contacts...</div>';
   try {
     const snap = await window.FB.getDocs(window.FB.collection(window.FB.db,'contacts'));
     // Populate flight filter dropdown
@@ -1504,10 +1511,12 @@ async function addContact() { saveContact(); }
 // ════════════ SUMMARY ════════════
 function renderSummary() {
   const total = veterans.length;
-  const sO = veterans.filter(v=>computeFlags(v).oxygen).length;
-  const sL = veterans.filter(v=>computeFlags(v).lift).length;
-  const sA = veterans.filter(v=>computeFlags(v).attention).length;
+  const sO  = veterans.filter(v=>computeFlags(v).oxygen).length;
+  const sL  = veterans.filter(v=>computeFlags(v).lift).length;
+  const sPL = veterans.filter(v=>computeFlags(v)['possible-lift']).length;
+  const sA  = veterans.filter(v=>computeFlags(v).attention).length;
   const sLR = veterans.filter(v=>computeFlags(v).lowrisk).length;
+  const sNI = veterans.filter(v=>v.interview_status !== 'complete').length;
   const sorted = [...veterans].sort((a,b)=>(parseInt(a.patient_number)||999)-(parseInt(b.patient_number)||999));
   const flightLabel = currentFlight ? (currentFlight.label ? currentFlight.dateLabel+' — '+currentFlight.label : currentFlight.dateLabel) : 'Current Flight';
 
@@ -1517,7 +1526,10 @@ function renderSummary() {
   html += '<div class="stat-card" style="border-color:#2e4878"><div class="count" style="color:var(--white)">'+total+'</div><div class="slabel" style="color:#6a88b8">Total</div></div>';
   html += '<div class="stat-card stat-oxygen"><div class="count">'+sO+'</div><div class="slabel">Oxygen</div></div>';
   html += '<div class="stat-card stat-lift"><div class="count">'+sL+'</div><div class="slabel">Lift</div></div>';
+  html += '<div class="stat-card stat-possible-lift"><div class="count">'+sPL+'</div><div class="slabel">Poss. Lift</div></div>';
   html += '<div class="stat-card stat-attention"><div class="count">'+sA+'</div><div class="slabel">Attention</div></div>';
+  html += '<div class="stat-card stat-lowrisk"><div class="count">'+sLR+'</div><div class="slabel">Low Risk</div></div>';
+  html += '<div class="stat-card stat-not-interviewed"><div class="count">'+sNI+'</div><div class="slabel">Not Interviewed</div></div>';
   html += '</div>';
 
   if (!sorted.length) { html += '<div class="empty">No veterans registered for this flight.</div></div>'; }
@@ -1527,14 +1539,16 @@ function renderSummary() {
       const bs = [];
       if(f.oxygen) bs.push('<span class="badge badge-oxygen">O₂</span>');
       if(f.lift) bs.push('<span class="badge badge-lift">Lift</span>');
+      if(f['possible-lift']) bs.push('<span class="badge badge-possible-lift">P.Lift</span>');
       if(f.attention) bs.push('<span class="badge badge-attention">Attn</span>');
       if(f.lowrisk) bs.push('<span class="badge badge-lowrisk">Low Risk</span>');
+      if(v.interview_status !== 'complete') bs.push('<span class="badge badge-pending">Not Interviewed</span>');
       const phone = v.phone||'';
       html += '<div class="sum-row">';
       html += '<div class="sum-num">'+(v.patient_number||'—')+'</div>';
       html += '<div class="sum-name">'+(v.veteran_name||'—')+'</div>';
       html += '<div class="sum-phone">'+(phone?'<a href="tel:'+phone+'" style="color:var(--oxygen-color)">'+phone+'</a>':'')+'</div>';
-      html += '<div style="display:flex;gap:4px">'+(bs.join('')||'<span class="badge badge-pending">Pending</span>')+'</div>';
+      html += '<div style="display:flex;gap:4px;flex-wrap:wrap">'+(bs.join('')||'')+'</div>';
       html += '</div>';
     });
     html += '</div>';
