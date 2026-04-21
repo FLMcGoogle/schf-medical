@@ -1106,7 +1106,7 @@ function buildDetailHTML(v) {
     (v.neuro_conditions?'<div class="di" style="margin-bottom:8px"><div class="dl">Neuro</div><div class="dv">'+v.neuro_conditions+'</div></div>':'')+
     '<hr class="sep">' +
     '<div class="prov-section" style="margin-bottom:14px">' +
-    '<h4>👤 Veteran's Guardian (optional)</h4>' +
+    '<h4>👤 Veteran\'s Guardian (optional)</h4>' +
     '<div class="prov-fields">' +
     '<div class="pf"><label>Guardian First Name</label><input type="text" class="guardian-field" id="gfirst-'+v.id+'" value="'+(v.guardian_first||'')+'" placeholder="First name"></div>' +
     '<div class="pf"><label>Guardian Last Name</label><input type="text" class="guardian-field" id="glast-'+v.id+'" value="'+(v.guardian_last||'')+'" placeholder="Last name"></div>' +
@@ -1435,21 +1435,23 @@ async function renderContacts() {
       const d = docSnap.data();
       const flights = d.on_flight || [];
       const isOn = flightDate && flights.includes(flightDate);
-      html += '<div class="contact-card'+(isOn?' on-flight':'')+'" onclick="toggleContactFlight(''+docSnap.id+'')">';
+      const cid = docSnap.id;
+      html += '<div class="contact-card'+(isOn?' on-flight':'')+'" onclick="toggleContactFlight(this)" data-id="'+cid+'">';
       html += '<div class="ct-info">';
       html += '<div class="ct-name">'+d.first_name+' '+d.last_name+'</div>';
       if (d.role) html += '<div class="ct-role">'+d.role+'</div>';
       html += '<div class="ct-phone"><a href="tel:'+d.phone+'" onclick="event.stopPropagation()">📱 '+d.phone+'</a></div>';
       html += '</div>';
       if (isOn) html += '<span class="ct-badge">✈️ ON FLIGHT</span>';
-      html += '<button class="ct-del" onclick="event.stopPropagation();deleteContact(''+docSnap.id+'')" title="Remove">🗑</button>';
+      html += '<button class="ct-del" data-id="'+cid+'" onclick="event.stopPropagation();deleteContact(this.dataset.id)" title="Remove">🗑</button>';
       html += '</div>';
     });
     container.innerHTML = html;
   } catch(e) { container.innerHTML = '<div class="empty" style="color:#e07070">Error: '+e.message+'</div>'; }
 }
 
-async function toggleContactFlight(id) {
+async function toggleContactFlight(el) {
+  const id = el.dataset ? el.dataset.id : el;
   const flightDate = currentFlight ? currentFlight.date : '';
   if (!flightDate) { alert('No flight selected. Please select a flight first.'); return; }
   try {
