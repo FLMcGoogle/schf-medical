@@ -30,6 +30,7 @@
     --navy: #0a1628; --deep: #060e1c; --red: #b22234; --bright-red: #d42b3a;
     --white: #f0f4ff; --gold: #c8a951; --border: #1e3158; --card-bg: #0d1e38;
     --oxygen-color: #3b9ef5; --lift-color: #f5a623; --attention-color: #e05252; --lowrisk-color: #4caf7d;
+    --possible-lift-color: #c084fc;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Source Sans 3', sans-serif; background: var(--deep); color: var(--white); min-height: 100vh; }
@@ -113,8 +114,10 @@
   .app-body { padding: 12px; max-width: 900px; margin: 0 auto; }
 
   /* STATS — now clickable tiles */
-  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
-  @media (max-width:460px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+  .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+  @media (min-width:600px) { .stats-row { grid-template-columns: repeat(6,1fr); } }
+  .stat-not-interviewed { border-color: transparent; } .stat-not-interviewed.active-filter { border-color: var(--red); background: rgba(178,34,52,0.1); }
+  .stat-not-interviewed .count,.stat-not-interviewed .slabel { color: #e07070; }
   .stat-card { background: var(--card-bg); border: 2px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; user-select: none; }
   .stat-card:hover { transform: translateY(-1px); }
   .stat-card.active-filter { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
@@ -122,6 +125,8 @@
   .stat-card .slabel { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; opacity: 0.8; }
   .stat-oxygen { border-color: transparent; } .stat-oxygen.active-filter { border-color: var(--oxygen-color); background: rgba(59,158,245,0.1); }
   .stat-lift { border-color: transparent; } .stat-lift.active-filter { border-color: var(--lift-color); background: rgba(245,166,35,0.1); }
+  .stat-possible-lift { border-color: transparent; } .stat-possible-lift.active-filter { border-color: var(--possible-lift-color); background: rgba(192,132,252,0.1); }
+  .stat-possible-lift .count,.stat-possible-lift .slabel { color: var(--possible-lift-color); }
   .stat-attention { border-color: transparent; } .stat-attention.active-filter { border-color: var(--attention-color); background: rgba(224,82,82,0.1); }
   .stat-lowrisk { border-color: transparent; } .stat-lowrisk.active-filter { border-color: var(--lowrisk-color); background: rgba(76,175,125,0.1); }
   .stat-oxygen .count,.stat-oxygen .slabel { color: var(--oxygen-color); }
@@ -152,6 +157,7 @@
   .badge { font-size: 0.66rem; font-weight: 700; padding: 2px 7px; border-radius: 8px; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
   .badge-oxygen { background: rgba(59,158,245,0.2); color: var(--oxygen-color); border: 1px solid rgba(59,158,245,0.3); }
   .badge-lift { background: rgba(245,166,35,0.2); color: var(--lift-color); border: 1px solid rgba(245,166,35,0.3); }
+  .badge-possible-lift { background: rgba(192,132,252,0.2); color: var(--possible-lift-color); border: 1px solid rgba(192,132,252,0.3); }
   .badge-attention { background: rgba(224,82,82,0.2); color: var(--attention-color); border: 1px solid rgba(224,82,82,0.3); }
   .badge-lowrisk { background: rgba(76,175,125,0.2); color: var(--lowrisk-color); border: 1px solid rgba(76,175,125,0.3); }
   .badge-pending { background: rgba(140,140,180,0.12); color: #6060aa; border: 1px solid rgba(140,140,180,0.2); }
@@ -191,6 +197,7 @@
   .ftog { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); font-size: 0.76rem; font-weight: 700; cursor: pointer; transition: all 0.2s; color: #6a88b8; text-transform: uppercase; letter-spacing: 0.04em; user-select: none; }
   .ftog.on-oxygen { background: rgba(59,158,245,0.2); color: var(--oxygen-color); border-color: var(--oxygen-color); }
   .ftog.on-lift { background: rgba(245,166,35,0.2); color: var(--lift-color); border-color: var(--lift-color); }
+  .ftog.on-possible-lift { background: rgba(192,132,252,0.2); color: var(--possible-lift-color); border-color: var(--possible-lift-color); }
   .ftog.on-attention { background: rgba(224,82,82,0.2); color: var(--attention-color); border-color: var(--attention-color); }
   .ftog.on-lowrisk { background: rgba(76,175,125,0.2); color: var(--lowrisk-color); border-color: var(--lowrisk-color); }
 
@@ -338,8 +345,8 @@
         <option value="soundoff">Sort: Sound-Off #</option>
         <option value="name">Sort: Name A–Z</option>
         <option value="submitted">Sort: Submitted</option>
-        <option value="interviewed">Sort: Interviewed First</option>
-        <option value="not_interviewed">Sort: Not Interviewed First</option>
+        <option value="interviewed">Sort: Interviewed</option>
+        <option value="not_interviewed">Sort: Not Interviewed</option>
       </select>
     </div>
     <div class="add-roster-tile" onclick="goToAdd()">➕ &nbsp;ADD VETERAN</div>
@@ -393,35 +400,6 @@
       </div>
     </div>
 
-    <!-- GENERAL -->
-    <div class="section-card">
-      <div class="section-header"><span>🏥</span><h2>General Medical History</h2></div>
-      <div class="section-body">
-        <div class="form-row">
-          <label>Have you been hospitalized in the last 6 months?</label>
-          <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_hospitalized" value="yes" onchange="atoggle('a_hospitalized_reason',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_hospitalized" value="no" onchange="atoggle('a_hospitalized_reason',false)"> No</label>
-          </div>
-          <div id="a_hospitalized_reason" class="conditional">
-            <label>Reason for hospitalization:</label>
-            <textarea id="a_hospitalized_reason_txt" placeholder="Please describe..."></textarea>
-          </div>
-        </div>
-        <div class="form-row">
-          <label>Do you have any metal implants or devices?</label>
-          <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_metal_implants" value="yes" onchange="atoggle('a_metal_type',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_metal_implants" value="no" onchange="atoggle('a_metal_type',false)"> No</label>
-          </div>
-          <div id="a_metal_type" class="conditional">
-            <label>Type:</label>
-            <textarea id="a_metal_implants_type" placeholder="Please describe the type of implant or device..."></textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- RESPIRATORY -->
     <div class="section-card">
       <div class="section-header"><span>🫁</span><h2>Respiratory</h2></div>
@@ -470,34 +448,6 @@
               <label class="radio-opt"><input type="radio" name="a_rescue_inhaler" value="yes"> Yes</label>
               <label class="radio-opt"><input type="radio" name="a_rescue_inhaler" value="no"> No</label>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CARDIAC -->
-    <div class="section-card">
-      <div class="section-header"><span>❤️</span><h2>Cardiac</h2></div>
-      <div class="section-body">
-        <div class="form-row">
-          <label>Does the veteran have unstable angina?</label>
-          <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_unstable_angina" value="yes" onchange="autoFlag('attention',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_unstable_angina" value="no"> No</label>
-          </div>
-        </div>
-        <div class="form-row">
-          <label>Does the veteran require nitroglycerin?</label>
-          <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_nitroglycerin" value="yes"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_nitroglycerin" value="no"> No</label>
-          </div>
-        </div>
-        <div class="form-row">
-          <label>Does the veteran have a pacemaker or internal defibrillator?</label>
-          <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_pacemaker" value="yes" onchange="autoFlag('attention',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_pacemaker" value="no"> No</label>
           </div>
         </div>
       </div>
@@ -557,24 +507,6 @@
       </div>
     </div>
 
-    <!-- NEURO -->
-    <div class="section-card">
-      <div class="section-header"><span>🧠</span><h2>Neurological</h2></div>
-      <div class="section-body">
-        <div class="form-row">
-          <label>Does the veteran have any neurologic conditions affecting their abilities?</label>
-          <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_neuro" value="yes" onchange="atoggle('a_neuro_detail',true);autoFlag('attention',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_neuro" value="no" onchange="atoggle('a_neuro_detail',false)"> No</label>
-          </div>
-          <div id="a_neuro_detail" class="conditional">
-            <label>Please describe:</label>
-            <textarea id="a_neuro_conditions" placeholder="e.g., Parkinson's, stroke, dementia..."></textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- MOBILITY -->
     <div class="section-card">
       <div class="section-header"><span>♿</span><h2>Mobility</h2></div>
@@ -582,8 +514,8 @@
         <div class="form-row">
           <label>Does the veteran have concerns about going up/down 6 steps to get on/off the bus?</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_bus_steps" value="yes" onchange="autoFlag('lift',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_bus_steps" value="no"> No</label>
+            <label class="radio-opt"><input type="radio" name="a_bus_steps" value="yes" onchange="autoFlagMobility()"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_bus_steps" value="no" onchange="autoFlagMobility()"> No</label>
           </div>
         </div>
         <div class="form-row">
@@ -605,8 +537,8 @@
         <div class="form-row">
           <label>Will the veteran need a wheelchair to get on and off the airplane?</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_airport_wheelchair" value="yes" onchange="autoFlag('lift',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_airport_wheelchair" value="no"> No</label>
+            <label class="radio-opt"><input type="radio" name="a_airport_wheelchair" value="yes" onchange="autoFlagMobility()"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_airport_wheelchair" value="no" onchange="autoFlagMobility()"> No</label>
           </div>
         </div>
       </div>
@@ -667,6 +599,7 @@
         <div class="flag-toggles" id="addFlagToggles">
           <div class="ftog" id="aftog-oxygen" onclick="toggleAddFlag('oxygen')">🫁 Oxygen</div>
           <div class="ftog" id="aftog-lift" onclick="toggleAddFlag('lift')">🏋️ Lift</div>
+          <div class="ftog" id="aftog-possible-lift" onclick="toggleAddFlag('possible-lift')">🔼 Poss. Lift</div>
           <div class="ftog" id="aftog-attention" onclick="toggleAddFlag('attention')">⚠️ Attention</div>
           <div class="ftog" id="aftog-lowrisk" onclick="toggleAddFlag('lowrisk')">✅ Low Risk</div>
         </div>
@@ -707,19 +640,31 @@
   <div id="tab-contacts" class="app-body" style="display:none">
     <div class="add-form-card">
       <h3>📞 IMPORTANT PHONE NUMBERS</h3>
-      <p style="font-size:0.82rem;color:#6a88b8;margin-bottom:16px;line-height:1.5">Add staff and key contacts below. Mark who is flying on the current flight by tapping their card.</p>
+      <p style="font-size:0.82rem;color:#6a88b8;margin-bottom:16px;line-height:1.5">Add staff and key contacts. Tap a contact card to mark them as flying on a specific flight date.</p>
       <div style="background:rgba(200,169,81,0.07);border:1px solid rgba(200,169,81,0.2);border-radius:10px;padding:14px;margin-bottom:18px;">
-        <p style="font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">ADD CONTACT</p>
+        <p style="font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;" id="ctFormTitle">ADD CONTACT</p>
+        <input type="hidden" id="ct_edit_id" value="">
         <div class="add-grid">
           <div class="add-f"><label>First Name *</label><input type="text" id="ct_first" placeholder="First"></div>
           <div class="add-f"><label>Last Name *</label><input type="text" id="ct_last" placeholder="Last"></div>
           <div class="add-f"><label>Cell Phone *</label><input type="tel" id="ct_phone" placeholder="321-555-0000" oninput="fmtPhone(this)"></div>
           <div class="add-f"><label>Role</label><input type="text" id="ct_role" placeholder="e.g. Lead Nurse, Pilot, Guardian"></div>
         </div>
-        <button class="btn-save" onclick="addContact()">+ Add Contact</button>
-        <span class="save-ok" id="ctAddOk">✓ Added</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
+          <button class="btn-save" id="ctSaveBtn" onclick="saveContact()">+ Add Contact</button>
+          <button class="btn-del" id="ctCancelBtn" style="display:none" onclick="cancelEditContact()">Cancel</button>
+          <span class="save-ok" id="ctAddOk">✓ Saved</span>
+        </div>
       </div>
-      <p style="font-size:0.72rem;font-weight:700;color:#6a88b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">CONTACTS — tap to toggle on current flight</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <p style="font-size:0.72rem;font-weight:700;color:#6a88b8;text-transform:uppercase;letter-spacing:0.06em;margin:0">CONTACTS — tap card to toggle flight assignment</p>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:0.72rem;color:#6a88b8;font-weight:600">View flight:</label>
+          <select id="ctFlightFilter" onchange="renderContacts()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Source Sans 3',sans-serif;font-size:0.8rem;padding:5px 10px;outline:none">
+            <option value="">— All contacts —</option>
+          </select>
+        </div>
+      </div>
       <div id="contactsList"><div class="loading">Loading...</div></div>
     </div>
   </div>
@@ -734,7 +679,7 @@ let veterans = [];
 let currentFlight = null;   // { date, label, id }
 let allFlights = [];
 let unsubscribe = null;
-const addFlags = { oxygen:false, lift:false, attention:false, lowrisk:false };
+const addFlags = { oxygen:false, lift:false, 'possible-lift':false, attention:false, lowrisk:false };
 let activeFilter = null;    // 'oxygen' | 'lift' | 'attention' | 'lowrisk' | null
 let expandedId = null;
 
@@ -928,9 +873,12 @@ function startLiveSync() {
 // ════════════ FLAGS ════════════
 function computeFlags(v) {
   const pf = v.providerFlags || {};
+  // Possible Lift: needs help with 6 steps but NOT airport wheelchair (the other 2 steps)
+  const autoPossibleLift = v.bus_steps === 'yes' && v.airport_wheelchair !== 'yes';
   return {
     oxygen: !!pf.oxygen || v.requires_oxygen === 'yes',
-    lift: !!pf.lift || v.bus_steps === 'yes' || v.airport_wheelchair === 'yes',
+    lift: !!pf.lift || (v.bus_steps === 'yes' && v.airport_wheelchair === 'yes'),
+    'possible-lift': !!pf['possible-lift'] || autoPossibleLift,
     attention: !!pf.attention || v.dialysis === 'yes' || v.insulin_help_needed === 'yes' || v.higher_risk === 'yes',
     lowrisk: !!pf.lowrisk
   };
@@ -940,6 +888,7 @@ function badgesHTML(flags) {
   const b = [];
   if (flags.oxygen) b.push('<span class="badge badge-oxygen">O₂</span>');
   if (flags.lift) b.push('<span class="badge badge-lift">Lift</span>');
+  if (flags['possible-lift']) b.push('<span class="badge badge-possible-lift">Poss.Lift</span>');
   if (flags.attention) b.push('<span class="badge badge-attention">Attn</span>');
   if (flags.lowrisk) b.push('<span class="badge badge-lowrisk">Low Risk</span>');
   if (!b.length) b.push('<span class="badge badge-pending">Pending</span>');
@@ -953,17 +902,20 @@ function renderRoster() {
 
   let vets = [...veterans];
   if (search) vets = vets.filter(v => (v.veteran_name||'').toLowerCase().includes(search));
-  if (activeFilter) vets = vets.filter(v => computeFlags(v)[activeFilter]);
+  if (activeFilter === 'not-interviewed') { vets = vets.filter(v => v.interview_status !== 'complete'); }
+  else if (activeFilter) vets = vets.filter(v => computeFlags(v)[activeFilter]);
 
   // Stats (from full flight list, not filtered)
   const sO = veterans.filter(v => computeFlags(v).oxygen).length;
   const sL = veterans.filter(v => computeFlags(v).lift).length;
+  const sPL = veterans.filter(v => computeFlags(v)['possible-lift']).length;
   const sA = veterans.filter(v => computeFlags(v).attention).length;
   const sLR = veterans.filter(v => computeFlags(v).lowrisk).length;
+  const sNI = veterans.filter(v => v.interview_status !== 'complete').length;
 
-  document.getElementById('statsRow').innerHTML = ['oxygen','lift','attention','lowrisk'].map((t,i) => {
+  document.getElementById('statsRow').innerHTML = ['oxygen','lift','possible-lift','attention','lowrisk','not-interviewed'].map((t,i) => {
     const counts = [sO,sL,sA,sLR];
-    const labels = ['Oxygen','Lift','Attention','Low Risk'];
+    const labels = ['Oxygen','Lift','Poss. Lift','Attention','Low Risk','Not Interviewed'];
     const isActive = activeFilter === t;
     return '<div class="stat-card stat-'+t+(isActive?' active-filter':'')+'" onclick="toggleStatFilter(\''+t+'\')"><div class="count">'+counts[i]+'</div><div class="slabel">'+labels[i]+'</div></div>';
   }).join('');
@@ -1122,6 +1074,7 @@ function buildDetailHTML(v) {
     '<div class="flag-toggles" style="margin-bottom:14px">' +
     '<div class="ftog '+(pf.oxygen?'on-oxygen':'')+'" id="ftog-oxygen-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'oxygen\')">🫁 Oxygen</div>' +
     '<div class="ftog '+(pf.lift?'on-lift':'')+'" id="ftog-lift-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'lift\')">🏋️ Lift</div>' +
+    '<div class="ftog '+(pf['possible-lift']?'on-possible-lift':'')+'" id="ftog-possible-lift-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'possible-lift\')">🔼 Poss. Lift</div>' +
     '<div class="ftog '+(pf.attention?'on-attention':'')+'" id="ftog-attention-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'attention\')">⚠️ Attention</div>' +
     '<div class="ftog '+(pf.lowrisk?'on-lowrisk':'')+'" id="ftog-lowrisk-'+v.id+'" onclick="toggleFlag(\''+v.id+'\',\'lowrisk\')">✅ Low Risk</div>' +
     '</div>' +
@@ -1261,6 +1214,23 @@ function atoggle(id, show) {
 }
 
 // autoFlag: automatically set a flag based on a yes answer
+function autoFlagMobility() {
+  const bus = document.querySelector('input[name="a_bus_steps"]:checked');
+  const wc  = document.querySelector('input[name="a_airport_wheelchair"]:checked');
+  const busYes = bus && bus.value === 'yes';
+  const wcYes  = wc  && wc.value  === 'yes';
+  // Lift: bus steps YES AND wheelchair YES (needs full lift)
+  const lift = busYes && wcYes;
+  // Possible Lift: bus steps YES but wheelchair NO/unanswered
+  const possLift = busYes && !wcYes;
+  addFlags['lift'] = lift;
+  addFlags['possible-lift'] = possLift;
+  const liftEl = document.getElementById('aftog-lift');
+  const plEl   = document.getElementById('aftog-possible-lift');
+  if (liftEl) liftEl.className = 'ftog' + (lift ? ' on-lift' : '');
+  if (plEl)   plEl.className   = 'ftog' + (possLift ? ' on-possible-lift' : '');
+}
+
 function autoFlag(type, on) {
   if (on) {
     addFlags[type] = true;
@@ -1322,10 +1292,12 @@ async function addVeteran() {
   const pacemaker = gv('a_pacemaker');
   const unstableAngina = gv('a_unstable_angina');
 
+  const autoPossLift = busVal==='yes' && airWheelchair!=='yes';
   const autoFlags = {
     oxygen: oxyVal==='yes' || addFlags.oxygen,
-    lift: busVal==='yes' || airWheelchair==='yes' || addFlags.lift,
-    attention: insulinHelp==='yes' || dialysisVal==='yes' || higherRisk==='yes' || neuroVal==='yes' || pacemaker==='yes' || unstableAngina==='yes' || addFlags.attention,
+    lift: (busVal==='yes' && airWheelchair==='yes') || addFlags.lift,
+    'possible-lift': autoPossLift || addFlags['possible-lift'],
+    attention: insulinHelp==='yes' || dialysisVal==='yes' || higherRisk==='yes' || addFlags.attention,
     lowrisk: addFlags.lowrisk
   };
 
@@ -1395,71 +1367,115 @@ async function addVeteran() {
     // Reset only the actual dropdowns (flight date, sound-off, MD form)
     ['a_flight','a_soundoff','a_mdform'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     document.querySelectorAll('#tab-add .conditional').forEach(el => el.classList.remove('show'));
-    ['oxygen','lift','attention','lowrisk'].forEach(f => { addFlags[f]=false; const el=document.getElementById('aftog-'+f); if(el) el.className='ftog'; });
+    ['oxygen','lift','possible-lift','attention','lowrisk'].forEach(f => { addFlags[f]=false; const el=document.getElementById('aftog-'+f); if(el) el.className='ftog'; });
     const ok = document.getElementById('addOk');
     ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'),2500);
     // Switch to roster
-    setTimeout(()=>{ switchTab('roster', document.querySelectorAll('.tab')[1]); }, 600);
+    setTimeout(()=>{ const rt=document.querySelector('.tabs .tab'); if(rt) switchTab('roster',rt); }, 600);
   } catch(e) { alert('Error adding veteran: '+e.message); }
 }
 
 // ════════════ CONTACTS ════════════
-async function addContact() {
+async function saveContact() {
+  const editId = document.getElementById('ct_edit_id').value;
   const first = document.getElementById('ct_first').value.trim();
   const last = document.getElementById('ct_last').value.trim();
   const phone = document.getElementById('ct_phone').value.trim();
   const role = document.getElementById('ct_role').value.trim();
-  if (!first || !last) { alert('First and last name required.'); return; }
-  if (!phone) { alert('Phone number required.'); return; }
+  if (!first || !last) { alert('First and last name are required.'); return; }
+  if (!phone) { alert('Phone number is required.'); return; }
   try {
-    await window.FB.addDoc(window.FB.collection(window.FB.db, 'contacts'), {
-      first_name: first, last_name: last, phone, role,
-      on_flight: [], createdAt: window.FB.serverTimestamp()
-    });
-    ['ct_first','ct_last','ct_phone','ct_role'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    if (editId) {
+      await window.FB.updateDoc(window.FB.doc(window.FB.db,'contacts',editId), { first_name:first, last_name:last, phone, role });
+    } else {
+      await window.FB.addDoc(window.FB.collection(window.FB.db,'contacts'), {
+        first_name:first, last_name:last, phone, role, on_flight:[], createdAt:window.FB.serverTimestamp()
+      });
+    }
+    cancelEditContact();
     const ok = document.getElementById('ctAddOk'); ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'),2500);
     renderContacts();
   } catch(e) { alert('Error: '+e.message); }
 }
 
+function cancelEditContact() {
+  document.getElementById('ct_edit_id').value = '';
+  ['ct_first','ct_last','ct_phone','ct_role'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('ctFormTitle').textContent = 'ADD CONTACT';
+  document.getElementById('ctSaveBtn').textContent = '+ Add Contact';
+  document.getElementById('ctCancelBtn').style.display = 'none';
+}
+
+function editContact(id, first, last, phone, role) {
+  document.getElementById('ct_edit_id').value = id;
+  document.getElementById('ct_first').value = first;
+  document.getElementById('ct_last').value = last;
+  document.getElementById('ct_phone').value = phone;
+  document.getElementById('ct_role').value = role;
+  document.getElementById('ctFormTitle').textContent = 'EDIT CONTACT';
+  document.getElementById('ctSaveBtn').textContent = '💾 Save Changes';
+  document.getElementById('ctCancelBtn').style.display = 'inline-flex';
+  document.getElementById('ct_first').focus();
+  document.getElementById('ct_first').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
 async function renderContacts() {
   const container = document.getElementById('contactsList');
+  const filterSel = document.getElementById('ctFlightFilter');
   if (!container) return;
   container.innerHTML = '<div class="loading">Loading...</div>';
   try {
     const snap = await window.FB.getDocs(window.FB.query(window.FB.collection(window.FB.db,'contacts'), window.FB.orderBy('last_name','asc')));
+    // Populate flight filter dropdown
+    if (filterSel) {
+      const prevVal = filterSel.value;
+      filterSel.innerHTML = '<option value="">— All contacts —</option>';
+      allFlights.forEach(f => {
+        const dl = new Date(f.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        const opt = document.createElement('option');
+        opt.value = f.date; opt.textContent = dl + (f.label?' — '+f.label:'');
+        if (f.date === prevVal) opt.selected = true;
+        filterSel.appendChild(opt);
+      });
+      // Default to current flight if set
+      if (!prevVal && currentFlight) filterSel.value = currentFlight.date;
+    }
+    const filterDate = filterSel ? filterSel.value : '';
     if (snap.empty) { container.innerHTML = '<div class="empty">No contacts yet. Add one above.</div>'; return; }
-    const flightDate = currentFlight ? currentFlight.date : '';
     let html = '';
     snap.forEach(docSnap => {
       const d = docSnap.data();
       const flights = d.on_flight || [];
-      const isOn = flightDate && flights.includes(flightDate);
+      const isOn = filterDate && flights.includes(filterDate);
       const cid = docSnap.id;
-      html += '<div class="contact-card'+(isOn?' on-flight':'')+'" onclick="toggleContactFlight(this)" data-id="'+cid+'">';
-      html += '<div class="ct-info">';
+      const fn = (d.first_name||'').replace(/'/g,"&apos;");
+      const ln = (d.last_name||'').replace(/'/g,"&apos;");
+      const ph = (d.phone||'').replace(/'/g,"&apos;");
+      const ro = (d.role||'').replace(/'/g,"&apos;");
+      html += '<div class="contact-card'+(isOn?' on-flight':'')+'">';
+      html += '<div class="ct-info" data-cid="'+cid+'" onclick="toggleContactFlight(this.getAttribute(\'data-cid\'))" style="cursor:pointer">';
       html += '<div class="ct-name">'+d.first_name+' '+d.last_name+'</div>';
       if (d.role) html += '<div class="ct-role">'+d.role+'</div>';
-      html += '<div class="ct-phone"><a href="tel:'+d.phone+'" onclick="event.stopPropagation()">📱 '+d.phone+'</a></div>';
+      html += '<div class="ct-phone"><a href="tel:'+d.phone+'">📱 '+d.phone+'</a></div>';
       html += '</div>';
       if (isOn) html += '<span class="ct-badge">✈️ ON FLIGHT</span>';
-      html += '<button class="ct-del" data-id="'+cid+'" onclick="event.stopPropagation();deleteContact(this.dataset.id)" title="Remove">🗑</button>';
+      html += '<button class="ct-del" data-cid="'+cid+'" data-fn="'+fn+'" data-ln="'+ln+'" data-ph="'+ph+'" data-ro="'+ro+'" onclick="editContact(this.dataset.cid,this.dataset.fn,this.dataset.ln,this.dataset.ph,this.dataset.ro)" title="Edit" style="color:var(--gold)">✏️</button>';
+      html += '<button class="ct-del" data-cid="'+cid+'" onclick="deleteContact(this.dataset.cid)" title="Remove">🗑</button>';
       html += '</div>';
     });
     container.innerHTML = html;
   } catch(e) { container.innerHTML = '<div class="empty" style="color:#e07070">Error: '+e.message+'</div>'; }
 }
 
-async function toggleContactFlight(el) {
-  const id = el.dataset ? el.dataset.id : el;
-  const flightDate = currentFlight ? currentFlight.date : '';
-  if (!flightDate) { alert('No flight selected. Please select a flight first.'); return; }
+async function toggleContactFlight(id) {
+  const filterDate = document.getElementById('ctFlightFilter') ? document.getElementById('ctFlightFilter').value : (currentFlight ? currentFlight.date : '');
+  if (!filterDate) { alert('Please select a flight date from the dropdown above first.'); return; }
   try {
     const docRef = window.FB.doc(window.FB.db,'contacts',id);
     const docSnap = await window.FB.getDoc(docRef);
     if (!docSnap.exists()) return;
     const flights = docSnap.data().on_flight || [];
-    const newFlights = flights.includes(flightDate) ? flights.filter(f=>f!==flightDate) : [...flights, flightDate];
+    const newFlights = flights.includes(filterDate) ? flights.filter(f=>f!==filterDate) : [...flights, filterDate];
     await window.FB.updateDoc(docRef, { on_flight: newFlights });
     renderContacts();
   } catch(e) { alert('Error: '+e.message); }
@@ -1470,6 +1486,9 @@ async function deleteContact(id) {
   try { await window.FB.deleteDoc(window.FB.doc(window.FB.db,'contacts',id)); renderContacts(); }
   catch(e) { alert('Error: '+e.message); }
 }
+
+// Legacy alias
+async function addContact() { saveContact(); }
 
 // ════════════ SUMMARY ════════════
 function renderSummary() {
