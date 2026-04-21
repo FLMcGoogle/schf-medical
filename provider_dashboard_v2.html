@@ -24,7 +24,6 @@
   const auth = getAuth(app);
   window.FB = { db, auth, collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, signInWithEmailAndPassword, signOut, onAuthStateChanged };
   window.FB_READY = true;
-  document.dispatchEvent(new Event('firebase-ready'));
 </script>
 <style>
   :root {
@@ -740,21 +739,42 @@ let activeFilter = null;    // 'oxygen' | 'lift' | 'attention' | 'lowrisk' | nul
 let expandedId = null;
 
 // ════════════ AUTH ════════════
-document.addEventListener('firebase-ready', () => {
-  window.FB.onAuthStateChanged(window.FB.auth, user => {
-    if (user) { showFlightLanding(user); }
-    else { showLogin(); }
-  });
-});
+// Poll until Firebase module has loaded, then start auth listener
+(function waitForFB() {
+  if (window.FB && window.FB.onAuthStateChanged) {
+    window.FB.onAuthStateChanged(window.FB.auth, function(user) {
+      if (user) { showFlightLanding(user); }
+      else { showLogin(); }
+    });
+  } else {
+    setTimeout(waitForFB, 50);
+  }
+})();
 
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPass').value;
-  document.getElementById('loginError').textContent = '';
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please enter email and password.'; return; }
+  if (!window.FB || !window.FB.signInWithEmailAndPassword) { errEl.textContent = 'App still loading — please wait 2 seconds and try again.'; return; }
+  const btn = document.querySelector('.btn-login');
+  if (btn) { btn.textContent = '⏳ Signing in...'; btn.disabled = true; }
   try {
     await window.FB.signInWithEmailAndPassword(window.FB.auth, email, pass);
   } catch(e) {
-    document.getElementById('loginError').textContent = 'Invalid email or password.';
+    const code = e.code || '';
+    if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      errEl.textContent = 'Invalid email or password.';
+    } else if (code === 'auth/too-many-requests') {
+      errEl.textContent = 'Too many attempts — try again in a few minutes.';
+    } else if (code === 'auth/network-request-failed') {
+      errEl.textContent = 'Network error — check your connection.';
+    } else {
+      errEl.textContent = 'Sign in failed: ' + (e.message || code);
+    }
+  } finally {
+    if (btn) { btn.textContent = '🔐  Secure Sign In'; btn.disabled = false; }
   }
 }
 document.addEventListener('keydown', e => {
