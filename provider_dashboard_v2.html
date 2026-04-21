@@ -521,8 +521,8 @@
         <div class="form-row">
           <label>Does the veteran require help with mobility/getting around?</label>
           <div class="radio-group">
-            <label class="radio-opt"><input type="radio" name="a_mobility_help" value="yes" onchange="atoggle('a_mobility_aids',true)"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="a_mobility_help" value="no" onchange="atoggle('a_mobility_aids',false)"> No</label>
+            <label class="radio-opt"><input type="radio" name="a_mobility_help" value="yes" onchange="atoggle('a_mobility_aids',true);autoFlagMobility()"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="a_mobility_help" value="no" onchange="atoggle('a_mobility_aids',false);autoFlagMobility()"> No</label>
           </div>
           <div id="a_mobility_aids" class="conditional">
             <label>What do they use? (select all that apply)</label>
@@ -874,11 +874,14 @@ function startLiveSync() {
 function computeFlags(v) {
   const pf = v.providerFlags || {};
   // Possible Lift: needs help with 6 steps but NOT airport wheelchair (the other 2 steps)
-  const autoPossibleLift = v.bus_steps === 'yes' && v.airport_wheelchair !== 'yes';
+  // Possible Lift: needs bus steps help but NO other mobility assistance
+  const needsMobilityHelp = v.airport_wheelchair === 'yes' || v.mobility_help === 'yes';
+  const autoPossibleLift = v.bus_steps === 'yes' && !needsMobilityHelp;
+  const autoLift = v.bus_steps === 'yes' && needsMobilityHelp;
   return {
     oxygen: !!pf.oxygen || v.requires_oxygen === 'yes',
-    lift: !!pf.lift || (v.bus_steps === 'yes' && v.airport_wheelchair === 'yes'),
-    'possible-lift': !!pf['possible-lift'] || autoPossibleLift,
+    lift: !!pf.lift || autoLift,
+    'possible-lift': !pf.lift && (!!pf['possible-lift'] || autoPossibleLift),
     attention: !!pf.attention || v.dialysis === 'yes' || v.insulin_help_needed === 'yes' || v.higher_risk === 'yes',
     lowrisk: !!pf.lowrisk
   };
@@ -914,7 +917,7 @@ function renderRoster() {
   const sNI = veterans.filter(v => v.interview_status !== 'complete').length;
 
   document.getElementById('statsRow').innerHTML = ['oxygen','lift','possible-lift','attention','lowrisk','not-interviewed'].map((t,i) => {
-    const counts = [sO,sL,sA,sLR];
+    const counts = [sO, sL, sPL, sA, sLR, sNI];
     const labels = ['Oxygen','Lift','Poss. Lift','Attention','Low Risk','Not Interviewed'];
     const isActive = activeFilter === t;
     return '<div class="stat-card stat-'+t+(isActive?' active-filter':'')+'" onclick="toggleStatFilter(\''+t+'\')"><div class="count">'+counts[i]+'</div><div class="slabel">'+labels[i]+'</div></div>';
@@ -1217,14 +1220,18 @@ function atoggle(id, show) {
 function autoFlagMobility() {
   const bus = document.querySelector('input[name="a_bus_steps"]:checked');
   const wc  = document.querySelector('input[name="a_airport_wheelchair"]:checked');
+  const mh  = document.querySelector('input[name="a_mobility_help"]:checked');
   const busYes = bus && bus.value === 'yes';
   const wcYes  = wc  && wc.value  === 'yes';
-  // Lift: bus steps YES AND wheelchair YES (needs full lift)
-  const lift = busYes && wcYes;
-  // Possible Lift: bus steps YES but wheelchair NO/unanswered
-  const possLift = busYes && !wcYes;
+  const mhYes  = mh  && mh.value  === 'yes';
+  // Lift: bus steps YES AND any other mobility help needed
+  const needsHelp = wcYes || mhYes;
+  const lift = busYes && needsHelp;
+  // Possible Lift: bus steps YES but NO other mobility assistance
+  const possLift = busYes && !needsHelp;
   addFlags['lift'] = lift;
   addFlags['possible-lift'] = possLift;
+  // They can never co-exist
   const liftEl = document.getElementById('aftog-lift');
   const plEl   = document.getElementById('aftog-possible-lift');
   if (liftEl) liftEl.className = 'ftog' + (lift ? ' on-lift' : '');
@@ -1425,7 +1432,7 @@ async function renderContacts() {
   if (!container) return;
   container.innerHTML = '<div class="loading">Loading...</div>';
   try {
-    const snap = await window.FB.getDocs(window.FB.query(window.FB.collection(window.FB.db,'contacts'), window.FB.orderBy('last_name','asc')));
+    const snap = await window.FB.getDocs(window.FB.collection(window.FB.db,'contacts'));
     // Populate flight filter dropdown
     if (filterSel) {
       const prevVal = filterSel.value;
@@ -1442,8 +1449,12 @@ async function renderContacts() {
     }
     const filterDate = filterSel ? filterSel.value : '';
     if (snap.empty) { container.innerHTML = '<div class="empty">No contacts yet. Add one above.</div>'; return; }
+    // Sort client-side to avoid needing a Firestore index
+    const docs = [];
+    snap.forEach(d => docs.push(d));
+    docs.sort((a,b) => (a.data().last_name||'').localeCompare(b.data().last_name||''));
     let html = '';
-    snap.forEach(docSnap => {
+    docs.forEach(docSnap => {
       const d = docSnap.data();
       const flights = d.on_flight || [];
       const isOn = filterDate && flights.includes(filterDate);
@@ -1464,7 +1475,7 @@ async function renderContacts() {
       html += '</div>';
     });
     container.innerHTML = html;
-  } catch(e) { container.innerHTML = '<div class="empty" style="color:#e07070">Error: '+e.message+'</div>'; }
+  } catch(e) { console.error('Contacts error:',e); container.innerHTML = '<div class="empty" style="color:#e07070">Error loading contacts: '+e.message+'</div>'; }
 }
 
 async function toggleContactFlight(id) {
@@ -1553,7 +1564,7 @@ async function renderFlightDates() {
       html += '</div>';
     });
     container.innerHTML = html;
-  } catch(e) { container.innerHTML = '<div class="empty" style="color:#e07070">Error: '+e.message+'</div>'; }
+  } catch(e) { console.error('Contacts error:',e); container.innerHTML = '<div class="empty" style="color:#e07070">Error loading contacts: '+e.message+'</div>'; }
 }
 
 async function addFlightDate() {
